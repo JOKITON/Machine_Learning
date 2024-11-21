@@ -1,11 +1,10 @@
-import os
-import sys
+"" "Builds a linear model with Estimators on the Titanic dataset. " ""
 
-import numpy as np
+# import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import tensorflow as tf
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# import tensorflow as tf
 
 # Load dataset.
 dftrain = pd.read_csv('https://storage.googleapis.com/tf-datasets/titanic/train.csv')
@@ -17,6 +16,6 @@ dftrain.head()
 
 dftrain.describe()
 
-dftrain.shape[0], dfeval.shape[0]
+print(dftrain.shape[0], dfeval.shape[0])
 
 dftrain.age.hist(bins=20)
