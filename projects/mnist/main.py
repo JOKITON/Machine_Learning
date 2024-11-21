@@ -1,6 +1,6 @@
 "" "Trains a simple deep NN on the MNIST dataset. " ""
 
-# import tensorflow as tf
+# import tensorflow as tf
 # import numpy as np
 from tensorflow import keras
 
@@ -39,9 +39,9 @@ Y_test = keras.utils.to_categorical(Y_test, NB_CLASSES)
 
 # Build the model.
 model = keras.models.Sequential()
+model.add(keras.Input(shape=(RESHAPED,), name='input_layer'))
 model.add(keras.layers.Dense(
     NB_CLASSES,
-    input_shape=(RESHAPED,),
     name='dense_layer',
     activation='softmax')
 )
