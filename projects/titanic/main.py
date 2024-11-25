@@ -34,10 +34,14 @@ for feature_name in NUMERIC_COLUMNS:
 def preprocess(features):
     features = features.copy()  # Ensure we don't modify the original DataFrame
     for feature_name in CATEGORICAL_COLUMNS:
+        print(f"Original shape of {feature_name}: {features[feature_name].shape}")
         transformed_feature = categorical_preprocessing_layers[feature_name](features[feature_name])
+        print(f"Transformed shape of {feature_name}: {transformed_feature.shape}")
         features[feature_name] = tf.expand_dims(transformed_feature, -1)
     for feature_name in NUMERIC_COLUMNS:
+        print(f"Original shape of {feature_name}: {features[feature_name].shape}")
         transformed_feature = numeric_preprocessing_layers[feature_name](features[feature_name])
+        print(f"Transformed shape of {feature_name}: {transformed_feature.shape}")
         features[feature_name] = tf.expand_dims(transformed_feature, -1)
     return features
 

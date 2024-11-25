@@ -9,7 +9,7 @@ This repo will be used for learning & project developing purposes, using
 
 ## Initialization
 
-First, please run `sh init.sh` or `bash init.sh`.
+To build the Python virtual enviroment with its dependencies, please run `source init.sh`.
 
 ## Documentation
 
