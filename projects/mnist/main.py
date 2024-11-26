@@ -49,7 +49,7 @@ model = keras.models.Sequential([
 
 predictions = model(X_train[:1]).numpy()
 
-loss_fn = tf.keras.losses.CategoricalCrossentropy()
+loss_fn = keras.losses.CategoricalCrossentropy()
 
 model.compile(optimizer='adam',
               loss=loss_fn,
@@ -59,7 +59,7 @@ model.fit(X_train, Y_train, epochs=5)
 
 model.evaluate(X_test, Y_test, verbose=2)
 
-probability_model = tf.keras.Sequential([
+probability_model = keras.Sequential([
   model,
   tf.keras.layers.Softmax()
 ])

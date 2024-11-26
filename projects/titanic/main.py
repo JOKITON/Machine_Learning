@@ -1,8 +1,8 @@
 "" "Builds a linear model with Estimators on the Titanic dataset. " ""
 
-import pandas as pd
 import tensorflow as tf
-from tensorflow.keras.layers import StringLookup, IntegerLookup, Normalization, Dense, Input, Concatenate
+import pandas as pd
+from tensorflow import keras
 
 # Load your data
 dftrain = pd.read_csv('https://storage.googleapis.com/tf-datasets/titanic/train.csv')
@@ -12,7 +12,8 @@ dfeval = pd.read_csv('https://storage.googleapis.com/tf-datasets/titanic/eval.cs
 y_train = dftrain.pop('survived')
 y_eval = dfeval.pop('survived')
 
-CATEGORICAL_COLUMNS = ['sex', 'n_siblings_spouses', 'parch', 'class', 'deck', 'embark_town', 'alone']
+CATEGORICAL_COLUMNS = ['sex', 'n_siblings_spouses', 'parch',
+                       'class', 'deck', 'embark_town', 'alone']
 NUMERIC_COLUMNS = ['age', 'fare']
 
 # Create preprocessing layers for categorical columns
@@ -20,18 +21,19 @@ categorical_preprocessing_layers = {}
 for feature_name in CATEGORICAL_COLUMNS:
     vocabulary = dftrain[feature_name].unique()
     if dftrain[feature_name].dtype == 'object':
-        categorical_preprocessing_layers[feature_name] = StringLookup(vocabulary=vocabulary, output_mode='int')
+        categorical_preprocessing_layers[feature_name] = keras.layers.StringLookup(vocabulary=vocabulary, output_mode='int')
     else:
-        categorical_preprocessing_layers[feature_name] = IntegerLookup(vocabulary=vocabulary, output_mode='int')
+        categorical_preprocessing_layers[feature_name] = keras.layers.IntegerLookup(vocabulary=vocabulary, output_mode='int')
 
 # Create preprocessing layers for numeric columns
 numeric_preprocessing_layers = {}
 for feature_name in NUMERIC_COLUMNS:
-    normalizer = Normalization()
+    normalizer = keras.layers.Normalization()
     normalizer.adapt(dftrain[feature_name].values)
     numeric_preprocessing_layers[feature_name] = normalizer
 
 def preprocess(features):
+    """Preprocess the data by transforming categorical and numeric features."""
     features = features.copy()  # Ensure we don't modify the original DataFrame
     for feature_name in CATEGORICAL_COLUMNS:
         print(f"Original shape of {feature_name}: {features[feature_name].shape}")
@@ -46,6 +48,7 @@ def preprocess(features):
     return features
 
 def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32):
+    """Create an input function for the TensorFlow dataset."""
     def input_function():
         # Preprocess the data
         processed_data_df = preprocess(data_df)
@@ -64,13 +67,14 @@ for feature_name in NUMERIC_COLUMNS:
     feature_columns.append(numeric_preprocessing_layers[feature_name])
 
 # Create a Keras model
-inputs = {feature_name: Input(name=feature_name, shape=(1,), dtype=tf.float32) for feature_name in CATEGORICAL_COLUMNS + NUMERIC_COLUMNS}
-concatenated_inputs = Concatenate()(list(inputs.values()))
-x = Dense(128, activation='relu')(concatenated_inputs)
-x = Dense(64, activation='relu')(x)
-outputs = Dense(1, activation='sigmoid')(x)
+inputs = {feature_name: keras.layers.Input(name=feature_name, shape=(1,),
+        dtype=tf.float32) for feature_name in CATEGORICAL_COLUMNS + NUMERIC_COLUMNS}
+concatenated_inputs = keras.layers.Concatenate()(list(inputs.values()))
+x = keras.layers.Dense(128, activation='relu')(concatenated_inputs)
+x = keras.layers.Dense(64, activation='relu')(x)
+outputs = keras.layers.Dense(1, activation='sigmoid')(x)
 
-model = tf.keras.Model(inputs=inputs, outputs=outputs)
+model = keras.Model(inputs=inputs, outputs=outputs)
 
 model.compile(optimizer='adam',
               loss='binary_crossentropy',
