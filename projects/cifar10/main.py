@@ -1,21 +1,26 @@
 """ CIFAR-10 image classification using a Convolutional Neural Network """
 
 import os
+import sys
 import numpy as np
 from tensorflow import keras
 from keras import models, layers
+
+# Add the directory containing config.py to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+import config
 
 NB_CLASSES = 10
 NUM_EPOCHS = 20
 
 # Load the CIFAR-10 dataset
-if ('cifar10.npz' not in os.listdir()):
+if not os.path.exists(config.CIFAR10_PATH):
     (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
     # Save the dataset locally
-    np.savez_compressed('cifar10.npz',
-            x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
+    np.savez_compressed(config.CIFAR10_PATH,
+                        x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
 else:
-    data = np.load('cifar10.npz')
+    data = np.load(config.CIFAR10_PATH)
     x_train, y_train = data['x_train'], data['y_train']
     x_test, y_test = data['x_test'], data['y_test']
 
