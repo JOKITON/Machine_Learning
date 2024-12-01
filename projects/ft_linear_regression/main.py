@@ -9,12 +9,12 @@ df = pd.read_csv(config.FT_LINEAR_REGRESSION_CAR_MILEAGE_TRAIN)
 # Normalize mileage values (do this once, not inside the gradient calculation)
 mean_mileage = df['km'].mean()
 sigma_mileage = df['km'].std()
-print("Sigma (Standard deviation of mileage):", sigma_mileage)
+# print("Sigma (Standard deviation of mileage):", sigma_mileage)
 df['km'] = (df['km'] - mean_mileage) / sigma_mileage
 
-NUM_ITERATIONS = 5000000  # Number of iterations to repeat
-CONVERGENCE_THRESHOLD = 1e-6  # Optional: Stop when updates are very small
-LEARNING_RATE = 1e-4  # Increased learning rate
+NUM_ITERATIONS = 1000000  # Number of iterations to repeat
+CONVERGENCE_THRESHOLD = 1e-6  # Threshold for convergence
+LEARNING_RATE = 1e-4
 
 THETA0 = 0
 THETA1 = 0
@@ -34,7 +34,6 @@ def comp_gradients(theta0, theta1, dataframe):
 
         sum1 += (funct_predict(
             theta0, theta1, dataframe['km'][i]) - dataframe['price'][i]) * dataframe['km'][i]
-
     ret_tmp0, ret_tmp1 = sum0 / m, sum1 / m
     ret_tmp0 = LEARNING_RATE * ret_tmp0
     ret_tmp1 = LEARNING_RATE * ret_tmp1

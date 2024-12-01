@@ -1,4 +1,12 @@
+# Mac related files
 .DS_Store
+
+# Python virtual enviroment
 .venv
 __pycache__
+
+# Datasets
 *.npz
+
+# Plots
+*.png
