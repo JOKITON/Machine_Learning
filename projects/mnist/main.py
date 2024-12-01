@@ -1,8 +1,8 @@
 "" "Trains a simple deep NN on the MNIST dataset. " ""
 
-import tensorflow as tf
-# import numpy as np
 from tensorflow import keras
+from keras import layers
+# import numpy as np
 
 # Define network & training params
 EPOCHS = 300
@@ -61,7 +61,7 @@ model.evaluate(X_test, Y_test, verbose=2)
 
 probability_model = keras.Sequential([
   model,
-  tf.keras.layers.Softmax()
+  layers.Softmax()
 ])
 
 probability_model(X_test[:5])

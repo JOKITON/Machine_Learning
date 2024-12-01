@@ -5,6 +5,7 @@ import pandas as pd
 
 # * Normalizing data
 def manual_normalize(array):
+    """ Normalize the data """
     ret_array = []
     for value in array:
         ret_array.append((value - min(array)) / (max(array) - min(array)))
@@ -12,25 +13,26 @@ def manual_normalize(array):
 
 # Print dataframes
 def print_head(dftrain, y_train):
-    #* Print the head of the databases
+    """ Print the head of the databases """
     print(dftrain.head())
     print(y_train.head())
 
 def print_columns_raws(dftrain):
-    #* Print the number of rows and columns in the training set.
+    """ Print the number of rows and columns in the training set. """
     print(dftrain.describe())
 
 def print_columns(dftrain, dfeval):
-    #* Print the number of columns in the training and evaluation sets.
+    """ Print the number of columns in the training and evaluation sets. """
     print(dftrain.shape[0], dfeval.shape[0])
 
 def print_all(dftrain, y_train):
+    """ Print all the data """
     print_head(dftrain, y_train)
     print_columns_raws(dftrain)
     print_columns(dftrain, y_train)
 
 def show_plots(dftrain, y_train):
-    # * Show a plot with different data
+    """ Show a plot with different data """
 
     # Shows the age of the people
     dftrain.age.hist(bins=20)

@@ -21,9 +21,11 @@ categorical_preprocessing_layers = {}
 for feature_name in CATEGORICAL_COLUMNS:
     vocabulary = dftrain[feature_name].unique()
     if dftrain[feature_name].dtype == 'object':
-        categorical_preprocessing_layers[feature_name] = keras.layers.StringLookup(vocabulary=vocabulary, output_mode='int')
+        categorical_preprocessing_layers[feature_name] = keras.layers.StringLookup(
+            vocabulary=vocabulary, output_mode='int')
     else:
-        categorical_preprocessing_layers[feature_name] = keras.layers.IntegerLookup(vocabulary=vocabulary, output_mode='int')
+        categorical_preprocessing_layers[feature_name] = keras.layers.IntegerLookup(
+            vocabulary=vocabulary, output_mode='int')
 
 # Create preprocessing layers for numeric columns
 numeric_preprocessing_layers = {}
@@ -35,16 +37,16 @@ for feature_name in NUMERIC_COLUMNS:
 def preprocess(features):
     """Preprocess the data by transforming categorical and numeric features."""
     features = features.copy()  # Ensure we don't modify the original DataFrame
-    for feature_name in CATEGORICAL_COLUMNS:
-        print(f"Original shape of {feature_name}: {features[feature_name].shape}")
-        transformed_feature = categorical_preprocessing_layers[feature_name](features[feature_name])
-        print(f"Transformed shape of {feature_name}: {transformed_feature.shape}")
-        features[feature_name] = tf.expand_dims(transformed_feature, -1)
-    for feature_name in NUMERIC_COLUMNS:
-        print(f"Original shape of {feature_name}: {features[feature_name].shape}")
-        transformed_feature = numeric_preprocessing_layers[feature_name](features[feature_name])
-        print(f"Transformed shape of {feature_name}: {transformed_feature.shape}")
-        features[feature_name] = tf.expand_dims(transformed_feature, -1)
+    for feature in CATEGORICAL_COLUMNS:
+        print(f"Original shape of {feature}: {features[feature].shape}")
+        transformed_feature = categorical_preprocessing_layers[feature](features[feature])
+        print(f"Transformed shape of {feature}: {transformed_feature.shape}")
+        features[feature] = tf.expand_dims(transformed_feature, -1)
+    for feature in NUMERIC_COLUMNS:
+        print(f"Original shape of {feature}: {features[feature].shape}")
+        transformed_feature = numeric_preprocessing_layers[feature](features[feature])
+        print(f"Transformed shape of {feature}: {transformed_feature.shape}")
+        features[feature] = tf.expand_dims(transformed_feature, -1)
     return features
 
 def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32):
