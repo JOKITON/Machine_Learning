@@ -5,21 +5,17 @@ import config
 import numpy as np
 from df_utils import get_thetas_values
 
-TRAINING_MEAN = 0
-TRAINING_STD = 0
-FILE_PRINT_BOOL = 0
+TRAINING_MEAN = 101066.25
+TRAINING_STD = 52674.24560550151
 
 def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
     """ Create a plot of actual vs predicted prices and the regression line """
-    global TRAINING_MEAN
-    global TRAINING_STD
-    global FILE_PRINT_BOOL
 
+    if mile_frame != 'all':
+        file_print_bool = 1
+    else:
+        file_print_bool = 0
     theta0, theta1 = get_thetas_values()
-
-    if TRAINING_MEAN == 0 or TRAINING_STD == 0:
-        TRAINING_MEAN = df_mileage.mean()
-        TRAINING_STD = df_mileage.std()
 
     # Scatter plot of actual and predicted prices
     plt.scatter(
@@ -38,7 +34,6 @@ def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
 
     # Normalize the mileage range for the regression function
     normalized_mileage = (mileage_range - TRAINING_MEAN) / TRAINING_STD
-
 
     # Compute the regression line using normalized mileage
     regression_line = theta0 + theta1 * normalized_mileage
@@ -65,10 +60,10 @@ def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
     print(
         "📥 Plot saved as 'actual_vs_predicted_prices_" + mile_frame + ".png'")
 
-    if (FILE_PRINT_BOOL == 0):
+    if file_print_bool == 0:
         print(
             "📩 File location : " + config.FT_LINEAR_REGRESION_PLOT_PATH + "")
-        FILE_PRINT_BOOL = 1
+        file_print_bool = 1
 
     # Clear the current plot to avoid overlapping
     plt.clf()

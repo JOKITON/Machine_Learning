@@ -16,7 +16,7 @@ def get_thetas_values() :
             config.FT_LINEAR_REGRESION_THETAS_PATH, "r", encoding="utf-8"
             ) as read_file:
             data = json.load(read_file)
-    except:
+    except FileNotFoundError:
         print("Error: thetas.json not found")
     return data["THETA0"], data["THETA1"]
 
