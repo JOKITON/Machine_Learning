@@ -2,20 +2,58 @@
 
 import matplotlib.pyplot as plt
 import config
+import numpy as np
+from df_utils import get_thetas_values
+
+TRAINING_MEAN = 0
+TRAINING_STD = 0
+FILE_PRINT_BOOL = 0
 
 def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
-    """ Create a plot of actual vs predicted prices """
+    """ Create a plot of actual vs predicted prices and the regression line """
+    global TRAINING_MEAN
+    global TRAINING_STD
+    global FILE_PRINT_BOOL
+
+    theta0, theta1 = get_thetas_values()
+
+    if TRAINING_MEAN == 0 or TRAINING_STD == 0:
+        TRAINING_MEAN = df_mileage.mean()
+        TRAINING_STD = df_mileage.std()
+
+    # Scatter plot of actual and predicted prices
     plt.scatter(
         df_mileage,
         df_real_price,
         color='blue',
-        label='Actual Prices (<=' + mile_frame + ' km)')
+        label='Actual Prices (<= ' + mile_frame + ' km)')
     plt.scatter(
         df_mileage,
         df_predicted_price,
         color='red',
         label='Predicted Prices (<= ' + mile_frame + ' km)')
 
+    # Generate a range of mileage values
+    mileage_range = np.linspace(min(df_mileage), max(df_mileage), 1000)
+
+    # Normalize the mileage range for the regression function
+    normalized_mileage = (mileage_range - TRAINING_MEAN) / TRAINING_STD
+
+
+    # Compute the regression line using normalized mileage
+    regression_line = theta0 + theta1 * normalized_mileage
+
+    # Plot the regression line
+    plt.plot(
+        mileage_range,
+        regression_line,
+        color='green',
+        label=f'Prediction Line: $\\theta_0$={theta0:.2f}, $\\theta_1$={theta1:.2f}')
+
+    # Force consistent Y-axis limits
+    plt.ylim(min(df_real_price) - 500, max(df_real_price) + 500)
+
+    # Plot settings
     plt.xlabel('Mileage (km)')
     plt.ylabel('Price')
     plt.legend()
@@ -24,7 +62,14 @@ def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
     # Save the plot to a file
     plt.savefig(
         config.FT_LINEAR_REGRESION_PLOT_PATH + 'actual_vs_predicted_prices_' + mile_frame + '.png')
-    print("Plot saved as 'actual_vs_predicted_prices_" + mile_frame + ".png'")
+    print(
+        "📥 Plot saved as 'actual_vs_predicted_prices_" + mile_frame + ".png'")
+
+    if (FILE_PRINT_BOOL == 0):
+        print(
+            "📩 File location : " + config.FT_LINEAR_REGRESION_PLOT_PATH + "")
+        FILE_PRINT_BOOL = 1
+
     # Clear the current plot to avoid overlapping
     plt.clf()
 

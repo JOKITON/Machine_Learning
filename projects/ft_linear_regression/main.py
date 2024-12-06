@@ -10,11 +10,12 @@ df = pd.read_csv(config.FT_LINEAR_REGRESSION_CAR_MILEAGE_TRAIN)
 mean_mileage = df['km'].mean()
 sigma_mileage = df['km'].std()
 # print("Sigma (Standard deviation of mileage):", sigma_mileage)
+
 df['km'] = (df['km'] - mean_mileage) / sigma_mileage
 
-NUM_ITERATIONS = 1000000  # Number of iterations to repeat
-CONVERGENCE_THRESHOLD = 1e-6  # Threshold for convergence
-LEARNING_RATE = 1e-4
+NUM_ITERATIONS = 100000  # Number of iterations to repeat
+CONVERGENCE_THRESHOLD = 1e-11  # Threshold for convergence
+LEARNING_RATE = 1e-1
 
 THETA0 = 0
 THETA1 = 0
@@ -56,6 +57,8 @@ for it in range(NUM_ITERATIONS):
 
     # Optional: Check for convergence
     if abs(tmp0) < CONVERGENCE_THRESHOLD and abs(tmp1) < CONVERGENCE_THRESHOLD:
+        mse = compute_mse(df, THETA0, THETA1)
+        print(f"Iteration {it}, MSE = {mse}")
         print(f"Converged after {it+1} iterations!")
         break
 
