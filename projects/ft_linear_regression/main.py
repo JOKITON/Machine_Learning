@@ -4,7 +4,7 @@ import pandas as pd
 import config
 from colorama import Fore, Back, Style
 from df_utils import set_thetas_values
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 RESET_ALL = Fore.RESET + Back.RESET + Style.RESET_ALL
 
@@ -53,10 +53,12 @@ def compute_mse(dataframe, theta0, theta1):
     ret_mse = sum((dataframe['price'] - predictions) ** 2) / len(dataframe)
     return ret_mse
 
-tqdm._instances.clear()
 # Gradient descent loop
 # for it in range(NUM_ITERATIONS):
-with tqdm(total=NUM_ITERATIONS, desc= Style.BRIGHT + "⌛ Please wait for the results...", leave=False) as pbar:
+with tqdm(
+    total=NUM_ITERATIONS,
+    desc= Style.BRIGHT + "⌛ Please wait for the results...",
+    leave=False) as pbar:
     for it in range(NUM_ITERATIONS):
         pbar.update(1)
         # Compute the gradients
@@ -69,8 +71,11 @@ with tqdm(total=NUM_ITERATIONS, desc= Style.BRIGHT + "⌛ Please wait for the re
         # Optional: Check for convergence
         if abs(tmp0) < CONVERGENCE_THRESHOLD and abs(tmp1) < CONVERGENCE_THRESHOLD:
             mse = compute_mse(df, THETA0, THETA1)
-            print(f"\tIteration " + Fore.LIGHTWHITE_EX + Style.BRIGHT + f"{it}" + RESET_ALL + ", MSE = " + Style.BRIGHT + f"{mse:3f}" + RESET_ALL)
-            print( Fore.GREEN + Style.BRIGHT + f"\nConverged after {it+1} iterations!" + RESET_ALL + "\n")
+            print("\tIteration " + Fore.LIGHTWHITE_EX
+                + Style.BRIGHT + f"{it}" + RESET_ALL
+                + ", MSE = " + Style.BRIGHT + f"{mse:3f}" + RESET_ALL)
+            print( Fore.GREEN + Style.BRIGHT
+                + f"\nConverged after {it+1} iterations!" + RESET_ALL + "\n")
             break
 
         if it % 100 == 0:
@@ -79,9 +84,14 @@ with tqdm(total=NUM_ITERATIONS, desc= Style.BRIGHT + "⌛ Please wait for the re
 
 # Output the final results
 print("🧮 Results:" + RESET_ALL)
-print(Style.BRIGHT + "\t✴️ theta0: " + Fore.LIGHTBLUE_EX + Style.BRIGHT + f"{THETA0:3f}" + RESET_ALL)
-print(Style.BRIGHT + "\t✴️ theta1: " + Fore.LIGHTCYAN_EX + Style.BRIGHT + f"{THETA1:3f}" + RESET_ALL)
-print(
-        Style.DIM + "\n📥 Theta values have been saved in " + config.FT_LINEAR_REGRESION_THETAS_PATH + RESET_ALL)
+
+print(Style.BRIGHT + "\t✴️ theta0: " + Fore.LIGHTBLUE_EX
+      + Style.BRIGHT + f"{THETA0:3f}" + RESET_ALL)
+
+print(Style.BRIGHT + "\t✴️ theta1: " + Fore.LIGHTCYAN_EX
+      + Style.BRIGHT + f"{THETA1:3f}" + RESET_ALL)
+
+print(Style.DIM + "\n📥 Theta values have been saved in "
+        + config.FT_LINEAR_REGRESION_THETAS_PATH + RESET_ALL)
 
 set_thetas_values(THETA0, THETA1)

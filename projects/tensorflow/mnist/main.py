@@ -1,7 +1,7 @@
 "" "Trains a simple deep NN on the MNIST dataset. " ""
 
-from tensorflow import keras
 from keras import layers
+from tensorflow import keras
 # import numpy as np
 
 # Define network & training params

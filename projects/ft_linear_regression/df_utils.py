@@ -30,7 +30,8 @@ def set_thetas_values(theta0, theta1) :
         data['THETA0'] = theta0
         data['THETA1'] = theta1
         # Save the updated thetas back to the json file
-        with open(config.FT_LINEAR_REGRESION_THETAS_PATH, "w") as file:
+        with open(config.FT_LINEAR_REGRESION_THETAS_PATH, "w", encoding="utf-8"
+            ) as file:
             json.dump(data, file)
     except FileNotFoundError:
         print("Error: thetas.json not found")

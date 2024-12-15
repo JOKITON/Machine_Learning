@@ -1,7 +1,7 @@
 "" "Builds a linear model with Estimators on the Titanic dataset. " ""
 
-import tensorflow as tf
 import pandas as pd
+import tensorflow as tf
 from tensorflow import keras
 
 # Load your data

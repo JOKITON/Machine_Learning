@@ -9,7 +9,13 @@ This repo will be used for learning & project developing purposes, using
 
 ## Initialization
 
-To build the Python virtual enviroment with its dependencies, please run `source init.sh`.
+To build the Python virtual enviroment with its dependencies, please run `source scripts/init.sh`.
+
+## Other useful scripts
+
+To deactivate the Python virtual enviroment, run `source scripts/deactivate.sh`.
+
+To delete the Python virtual enviroment with all its dependencies, run `source scripts/clean.sh`.
 
 ## Documentation
 

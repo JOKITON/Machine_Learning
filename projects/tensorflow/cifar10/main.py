@@ -2,9 +2,9 @@
 
 import os
 import numpy as np
-from tensorflow import keras
-from keras import models, layers
 from config import CIFAR10_PATH
+from keras import models, layers
+from tensorflow import keras
 
 NB_CLASSES = 10
 NUM_EPOCHS = 50
