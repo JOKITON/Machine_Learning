@@ -20,6 +20,22 @@ def get_thetas_values() :
         print("Error: thetas.json not found")
     return data["THETA0"], data["THETA1"]
 
+def set_thetas_values(theta0, theta1) :
+    """ Retrieve theta values from thetas.json """
+    try:
+        with open(
+            config.FT_LINEAR_REGRESION_THETAS_PATH, "r", encoding="utf-8"
+            ) as read_file:
+            data = json.load(read_file)
+        data['THETA0'] = theta0
+        data['THETA1'] = theta1
+        # Save the updated thetas back to the json file
+        with open(config.FT_LINEAR_REGRESION_THETAS_PATH, "w") as file:
+            json.dump(data, file)
+    except FileNotFoundError:
+        print("Error: thetas.json not found")
+    return data["THETA0"], data["THETA1"]
+
 def denormalize_parameters(theta0, theta1, mean, std):
     """ Adjust theta0 and theta1 to work directly with real mileage values. """
     theta1_prime = theta1 / std

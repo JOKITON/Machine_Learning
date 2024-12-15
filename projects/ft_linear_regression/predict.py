@@ -9,7 +9,7 @@ from df_utils import get_thetas_values, display_precision
 RESET_ALL = Fore.RESET + Back.RESET + Style.RESET_ALL
 
 YES_NO = Fore.GREEN + Style.BRIGHT + " (yes" + RESET_ALL
-YES_NO += " / " + Fore.RED + Style.BRIGHT + "no): " + RESET_ALL
+YES_NO += " / " + Fore.RED + Style.BRIGHT + "no): " + RESET_ALL + Style.BRIGHT
 
 # Get theta values from thetas.json
 THETA0, THETA1 = get_thetas_values()
@@ -60,11 +60,13 @@ def plot_all_predictions(arg_df, arg_predicted_prices):
     check = 0
     while check == 0:
         str1 = input("└─> Do you want to create a plot of the data and save it locally?" + YES_NO)
+        print(RESET_ALL)
         if str1 == "yes":
             crt_plot(arg_df['km'], arg_df['price'], arg_predicted_prices, 'all')
             while check == 0:
                 str2 = input(
                     "\n└─> Do you want to create some plots with different km ranges?" + YES_NO)
+                print(RESET_ALL)
                 if str2 == "yes":
                     crt_diverse_df(arg_df, arg_predicted_prices)
                     crt_diverse_plot()
@@ -85,6 +87,7 @@ while 1:
     main_str1 = input(
         "└─> Do you want to predict" + Style.BRIGHT + Fore.LIGHTMAGENTA_EX
             + " all the prices" + RESET_ALL + " based on the dataset" + YES_NO)
+    print(RESET_ALL)
     if main_str1 == "yes":
         predicted_prices = make_all_predictions(df)
         plot_all_predictions(df, predicted_prices)
