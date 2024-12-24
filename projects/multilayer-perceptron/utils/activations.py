@@ -1,3 +1,5 @@
+""" Activation functions for neural networks. """
+
 import numpy as np
 
 def sigmoid(x):

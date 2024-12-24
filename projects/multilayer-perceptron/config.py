@@ -2,11 +2,17 @@
 
 import os
 import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-
 # Set the current working directory two directories above
-PWD = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+PWD = os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
+
+DF_UTILS = os.path.join(PWD, 'data/')
+UTILS = os.path.join(PWD, 'utils/')
+MODEL = os.path.join(PWD, 'model/')
+
+sys.path.append(DF_UTILS)
+sys.path.append(UTILS)
+sys.path.append(MODEL)
+print(sys.path)
 
 # Define basic parameters for the model
 DECAY_RATE = 0.99  # Decay rate for learning rate
@@ -27,7 +33,7 @@ MULTILAYER_PERCEPTRON_PLOT_PATH = os.path.join(PWD,
 	'plots/multilayer-perceptron/')
 
 MULTILAYER_PERCEPTRON_CLEAN_DATASET = os.path.join(PWD,
-	'datasets/multilayer-perceptron/data.csv')
+	'data/data.csv')
 
 MULTILAYER_PERCEPTRON_DATASET = os.path.join(PWD,
-	'datasets/multilayer-perceptron/raw_data.csv')
+	'data/raw_data.csv')

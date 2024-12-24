@@ -5,11 +5,12 @@ import pandas as pd
 from colorama import Fore, Back, Style
 from sklearn.model_selection import train_test_split
 import numpy as np
-from df_utils import conv_binary, check_df_errors, normalize_df
-from activation import sigmoid, relu, cross_entropy
-from calc_loss import compute_mse, compute_mae, compute_r2score, compute_loss
+from preprocessing import conv_binary, check_df_errors, normalize_df
+from activations import sigmoid, relu, cross_entropy
+from metrics import compute_mse, compute_mae, compute_r2score
+from loss import compute_loss
 from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD, EPOCHS, N_NEURONS, N_LAYERS, DIVIDE_NEURONS
-from learn import forward_propagation, compute_gradients, sigmoid_derivative
+from train import forward_propagation, compute_gradients, sigmoid_derivative
 
 RESET_ALL = Fore.RESET + Back.RESET + Style.RESET_ALL
 

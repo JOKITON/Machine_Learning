@@ -1,8 +1,6 @@
-import numpy as np
+""" Most used metrics for regression models. """
 
-def compute_loss(_results, _predictions):
-    """ Computes the loss for the given predictions and results. """
-    return np.sum(_results - _predictions)
+import numpy as np
 
 def compute_mse(_results, _predictions):
     """ Computes the Mean Squared Error for the given inputs, weights, and bias. """

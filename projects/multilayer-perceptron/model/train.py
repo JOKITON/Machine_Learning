@@ -1,5 +1,5 @@
 import numpy as np
-from activation import sigmoid, relu
+from activations import sigmoid, relu
 from config import LEARNING_RATE, N_LAYERS
 
 def stepforward(_X, _weights, _bias):
