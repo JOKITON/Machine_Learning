@@ -47,7 +47,7 @@ def comp_gradients(theta0, theta1, dataframe):
     ret_tmp1 = LEARNING_RATE * ret_tmp1
     return ret_tmp0, ret_tmp1
 
-def compute_mse(dataframe, theta0, theta1):
+def mse(dataframe, theta0, theta1):
     """ Compute the mean squared error """
     predictions = [funct_predict(theta0, theta1, x) for x in dataframe['km']]
     ret_mse = sum((dataframe['price'] - predictions) ** 2) / len(dataframe)
@@ -70,7 +70,7 @@ with tqdm(
 
         # Optional: Check for convergence
         if abs(tmp0) < CONVERGENCE_THRESHOLD and abs(tmp1) < CONVERGENCE_THRESHOLD:
-            mse = compute_mse(df, THETA0, THETA1)
+            mse = mse(df, THETA0, THETA1)
             print("\tIteration " + Fore.LIGHTWHITE_EX
                 + Style.BRIGHT + f"{it}" + RESET_ALL
                 + ", MSE = " + Style.BRIGHT + f"{mse:3f}" + RESET_ALL)
@@ -79,7 +79,7 @@ with tqdm(
             break
 
         if it % 100 == 0:
-            mse = compute_mse(df, THETA0, THETA1)
+            mse = mse(df, THETA0, THETA1)
             # print(f"\tIteration {it}, MSE = {mse:3f}")
 
 # Output the final results

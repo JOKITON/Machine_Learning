@@ -1,6 +1,6 @@
 import numpy as np
 from activations import sigmoid, relu
-from config import LEARNING_RATE, N_LAYERS
+from config import LEARNING_RATE, N_LAYERS, LAMBDA_REG
 
 def stepforward(_X, _weights, _bias):
     """ 
@@ -39,7 +39,7 @@ def forward_propagation(X, weights, biases, activation_function=sigmoid):
         z = stepforward(activations[-1], weights[i], biases[i])  # Compute z
         z_values.append(z)  # Save z for backpropagation
         if (i == len(weights) - 1):
-            a = sigmoid(z)
+            a = activation_function(z)
         else:
             a = relu(z)  # Apply activation
         activations.append(a)  # Save activation for next layer
@@ -58,7 +58,10 @@ def sigmoid_derivative(x):
     """
     return sigmoid(x) * (1 - sigmoid(x))
 
-def compute_gradients(activations, z_values, y_train, weights, biases, activation_derivative=sigmoid_derivative):
+def relu_derivative(x):
+    return np.where(x > 0, 1, 0)
+
+def compute_gradients(activations, z_values, y_train, weights, biases, activation_derivative=relu_derivative):
     """
     Compute gradients of weights and biases for a neural network using backpropagation.
     
@@ -85,6 +88,7 @@ def compute_gradients(activations, z_values, y_train, weights, biases, activatio
     for l in reversed(range(N_LAYERS)):
         # Gradients for weights and biases
         weight_gradients[l] = np.dot(activations[l].T, delta) / y_train.shape[0]  # Average over samples
+        weight_gradients[l] += (LAMBDA_REG / y_train.shape[0]) * weights[l]
 
         bias_gradients[l] = np.sum(delta, axis=0, keepdims=True) / y_train.shape[0]
 

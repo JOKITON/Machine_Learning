@@ -5,7 +5,7 @@ import sys
 from colorama import Fore, Back, Style
 
 # Set the current working directory two directories above
-PWD = os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
+PWD = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
 
 # Add paths to the system path
 DF_UTILS = os.path.join(PWD, 'data/')
@@ -31,14 +31,6 @@ CONVERGENCE_THRESHOLD = 1e-5
 EPOCHS_STOCHASTIC_1 = 2500
 EPOCHS_STOCHASTIC_2 = 5000
 EPOCHS_STOCHASTIC_3 = 10000
-
-EPOCHS_MINI_BATCH_1 = 500
-EPOCHS_MINI_BATCH_2 = 1000
-EPOCHS_MINI_BATCH_3 = 2000
-
-EPOCHS_WBATCH_1 = 100
-EPOCHS_WBATCH_2 = 500
-EPOCHS_WBATCH_3 = 1000
 
 # Mini-batch size
 BATCH_SIZE = 32

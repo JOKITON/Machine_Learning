@@ -87,17 +87,17 @@ def cross_entropy(y_true, y_pred):
     y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
     return -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
 
-def compute_mse(_results, _predictions):
+def f_mse(_results, _predictions):
     """ Computes the Mean Squared Error for the given inputs, weights, and bias. """
     # Calculate the MSE
     ret_mse = np.mean((_predictions - _results) ** 2)
     return ret_mse
 
-def compute_mae(_results, _predictions):
+def f_mae(_results, _predictions):
     """ Computes the Mean Absolute Error for the given predictions and results. """
     return np.mean(np.abs(_predictions - _results))
 
-def compute_r2score(_results, _predictions):
+def f_r2score(_results, _predictions):
     """ Computes the Mean Absolute Error for the given predictions and results. """
     math1 = np.sum((_results - _predictions) ** 2)
     math2 = np.sum((_results - np.mean(_results)) ** 2)
@@ -213,9 +213,9 @@ for i in range(EPOCHS):
         print(f"Training neuron {0}... Epoch {i}", f"MSE: {mse}")
 
 # MSE, MAE, r2 score
-mse = compute_mse(y_train, preds)
-mae = compute_mae(y_train, preds)
-r2 = compute_r2score(y_train, preds)
+mse = f_mse(y_train, preds)
+mae = f_mae(y_train, preds)
+r2 = f_r2score(y_train, preds)
 # print("Weights: ", weights)
 print(f"(End of training) MSE for neuron {0}: {mse}")
 print(f"(End of training) MAE for neuron {0}: {mae}")
@@ -227,9 +227,9 @@ W = np.asarray(weights).flatten()
 B = biases
 predictions = stepforward(X_test, W, B)
 
-test_mse = compute_mse(y_test, predictions)
-test_mae = compute_mae(y_test, predictions)
-test_r2 = compute_r2score(y_test, predictions)
+test_mse = f_mse(y_test, predictions)
+test_mae = f_mae(y_test, predictions)
+test_r2 = f_r2score(y_test, predictions)
 print(f"Test MSE for neuron {0}: {test_mse}")
 print(f"Test MAE for neuron {0}: {test_mae}")
 print(f"Test R2 Score for neuron {0}: {test_r2}")
