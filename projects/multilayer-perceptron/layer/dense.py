@@ -16,7 +16,7 @@ class DenseLayer:
     # Backwward Propagation
     dinputs = None
 
-    def __init__(self, n_inputs, n_neurons, activation_function, der_actv, f_dloss_actv):
+    def __init__(self, n_inputs, n_neurons, actv, der_actv, seed=None):
         """
         Initialize the Dense layer.
         
@@ -29,12 +29,14 @@ class DenseLayer:
             scale = np.sqrt(1 / n_inputs)
         else:  # Hidden layers (Leaky ReLU)
             scale = np.sqrt(2 / n_inputs)
+        if seed is not None:
+            np.random.seed(seed)  # Set the seed for reproducibility
+
         self.weights = np.random.randn(n_inputs, n_neurons) * scale
         self.biases = np.zeros((1, n_neurons))
 
-        self.f_actv = activation_function
+        self.f_actv = actv
         self.f_der_actv = der_actv
-        self.f_dloss_actv = f_dloss_actv
 
     def forward(self, inputs=None):
         """ 
@@ -61,12 +63,8 @@ class DenseLayer:
 		dvalues			- Gradient of the loss with respect to the output.
 		learning_rate	- The rate for gradient descent
         """
-        if (self.f_dloss_actv == "cross_entropy"): # Cross Entropy Partial derivative
-            dactivation = self.activations - yvalues
-        elif (self.f_dloss_actv == "mse"): # MSE Partial derivative
-            der_loss_activations = 2 * (self.activations - yvalues)
-            der_activation_zvalues = self.f_der_actv(self.output)
-            dactivation = (der_loss_activations * der_activation_zvalues)
+        # Partial derivative of BCE loss respect to activations
+        dactivation = self.activations - yvalues
 
         # Gradients with respect to weights, biases, and inputs
         dweights = np.dot(self.inputs.T, dactivation) / self.activations.shape[0]

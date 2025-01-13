@@ -88,8 +88,6 @@ def der_relu(x):
     """
     return np.where(x > 0, 1, 0)
 
-import numpy as np
-
 def der_tanh(x):
     """ 
     Compute the derivative of the tanh activation function.
@@ -102,4 +100,3 @@ def der_tanh(x):
     """
     tanh_x = np.tanh(x)
     return 1 - tanh_x**2
-

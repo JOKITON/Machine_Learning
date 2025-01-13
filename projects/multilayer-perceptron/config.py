@@ -13,6 +13,9 @@ UTILS = os.path.join(PWD, 'utils/')
 MODEL = os.path.join(PWD, 'model/')
 LAYER = os.path.join(PWD, 'layer/')
 PLOT = os.path.join(PWD, 'plots/')
+TRAINING_FB = os.path.join(PWD, 'training/full_batch/')
+TRAINING_MB = os.path.join(PWD, 'training/mini_batch/')
+TRAINING_ST = os.path.join(PWD, 'training/stochastic/')
 
 sys.path.append(DF_UTILS)
 sys.path.append(UTILS)
@@ -28,17 +31,17 @@ STEP_SIZE = 100
 CONVERGENCE_THRESHOLD = 1e-5
 
 # Define the number of epochs for each training method
+EPOCHS_FBATCH_1 = 300
+EPOCHS_FBATCH_2 = 100
+EPOCHS_FBATCH_3 = 2000
+
+EPOCHS_MINI_BATCH_1 = 500
+EPOCHS_MINI_BATCH_2 = 1500
+EPOCHS_MINI_BATCH_3 = 3000
+
 EPOCHS_STOCHASTIC_1 = 2500
 EPOCHS_STOCHASTIC_2 = 5000
 EPOCHS_STOCHASTIC_3 = 10000
-
-EPOCHS_MINI_BATCH_1 = 500
-EPOCHS_MINI_BATCH_2 = 1000
-EPOCHS_MINI_BATCH_3 = 2000
-
-EPOCHS_WBATCH_1 = 100
-EPOCHS_WBATCH_2 = 500
-EPOCHS_WBATCH_3 = 1000
 
 # Mini-batch size
 BATCH_SIZE = 32
@@ -69,18 +72,42 @@ ML_PLOT_PATH = os.path.join(PWD,
 	'plots/multilayer-perceptron/')
 
 ML_CLEAN_DATASET = os.path.join(PWD,
-	'data/data.csv')
+	'data/raw/data.csv')
+
+ML_PROCCESED = os.path.join(PWD,
+	'data/processed/')
 
 ML_TRAIN_X = os.path.join(PWD,
-	'data/X_train.csv')
+	'data/processed/X_train.csv')
 
 ML_TRAIN_Y = os.path.join(PWD,
-	'data/y_train.csv')
+	'data/processed/y_train.csv')
 
 ML_TEST_X = os.path.join(PWD,
-	'data/X_test.csv')
+	'data/processed/X_test.csv')
 
 ML_TEST_Y = os.path.join(PWD,
-	'data/y_test.csv')
+	'data/processed/y_test.csv')
+
+SEED_MB_SOFT = os.path.join(PWD,
+	'data/seeds/seed_mb_soft.json')
+
+SEED_MB_SIG = os.path.join(PWD,
+	'data/seeds/seed_mb_sig.json')
+
+SEED_FB_SIG = os.path.join(PWD,
+	'data/seeds/seed_fb_sig.json')
+
+SEED_FB_SOFT = os.path.join(PWD,
+	'data/seeds/seed_fb_soft.json')
+
+SEED_ST_SIG = os.path.join(PWD,
+	'data/seeds/seed_st_sig.json')
+
+SEED_ST_SOFT = os.path.join(PWD,
+	'data/seeds/seed_st_soft.json')
 
 RESET_ALL = Fore.RESET + Back.RESET + Style.RESET_ALL
+
+YES_NO = Fore.GREEN + Style.BRIGHT + " (yes" + RESET_ALL
+YES_NO += " / " + Fore.RED + Style.BRIGHT + "no): " + RESET_ALL + Style.BRIGHT
