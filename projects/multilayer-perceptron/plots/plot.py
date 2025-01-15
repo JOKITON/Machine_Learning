@@ -1,72 +1,65 @@
 import config
 from config import N_LAYERS
 from loss import f_loss, f_mse, f_mae, f_r2score, f_cross_entropy
+import matplotlib.pyplot as plt
 
 class Plot:
-	acc_train = None
-	acc_test = None
+	acc = None
 
-	mse_train = None
-	mse_test = None
+	mse = None
 
-	mae_train = None
-	mae_test = None
+	mae = None
 
-	def __init__(self, X_train, X_test, y_train, y_test, epochs):
-		self.acc_train = [epochs]
-		self.acc_test = [epochs]
+	def __init__(self, data_count):
+		self.acc = [[] for _ in range(data_count)]
 
-		self.mse_train = [epochs]
-		self.mse_test = [epochs]
+		self.mse = [[] for _ in range(data_count)]
 
-		self.mae_train = [epochs]
-		self.mae_test = [epochs]
-
-		self.X_train = X_train
-		self.X_test = X_test
-		self.y_train = y_train
-		self.y_test = y_test
+		self.mae = [[] for _ in range(data_count)]
   
-	def append_preds(self, layers):
+		# Plot configurations
+		self.label = ["" for _ in range(data_count)]
+		self.color = ["" for _ in range(data_count)]
+		self.linestyle = ["" for _ in range(data_count)]
+  
+		self.epochs = [0 for _ in range(data_count)]
+
+	def set_plot_config(self, data_type, color, pos, linestyle, epochs):
+		self.label[pos] = (data_type)
+		self.color[pos] = (color)
+		self.linestyle[pos] = (linestyle)
+		self.epochs[pos] = (epochs)
+
+	def set_error_data(self, X, y, layers, pos):
 		# Append the data
-		self.append_f_mae(layers)
-		self.append_f_mse(layers)
-		self.append_f_r2score(layers)
-  
-		return self.acc_train[-1], self.mse_train[-1], self.mae_train[-1]
+		self.append_f_mae(X, y, layers, pos)
+		self.append_f_mse(X, y, layers, pos)
+		self.append_f_r2score(X, y, layers, pos)
 
-	def append_f_mse(self, layers):
-		mse_train_data = self.get_plot_data("train", layers, "mse")
-		mse_test_data = self.get_plot_data("test", layers, "mse")
-		self.mse_train.append(mse_train_data)
-		self.mse_test.append(mse_test_data)
+	def get_error_data(self, pos):
+		return self.acc[pos][-1], self.mse[pos][-1], self.mae[pos][-1]
 
-	def append_f_mae(self, layers):
-		mae_train_data = self.get_plot_data("train", layers, "mae")
-		mae_test_data = self.get_plot_data("test", layers, "mae")
-		self.mae_train.append(mae_train_data)
-		self.mae_test.append(mae_test_data)
+	def append_f_mse(self, X, y, layers, pos):
+		mse_data = self.get_plot_data(X, y, layers, "mse")
+		self.mse[pos].append(mse_data)
 
-	def append_f_r2score(self, layers):
-		r2_train_data = self.get_plot_data("train", layers, "r2")
-		r2_test_data = self.get_plot_data("test", layers, "r2")
-		self.acc_train.append(r2_train_data)
-		self.acc_test.append(r2_test_data)
+	def append_f_mae(self, X, y, layers, pos):
+		mae_data = self.get_plot_data(X, y, layers, "mae")
+		self.mae[pos].append(mae_data)
 
-	def get_plot_data(self, data_type, layers, loss_type):
+	def append_f_r2score(self, X, y, layers, pos):
+		r2_data = self.get_plot_data(X, y, layers, "r2")
+		self.acc[pos].append(r2_data)
+
+	def get_plot_data(self, X, y, layers, loss_type):
 		activations = [None] * N_LAYERS
 
-		if (data_type == "train"):
-			X = self.X_train
-			y = self.y_train
-		elif (data_type == "test"):
-			X = self.X_test
-			y = self.y_test
 		train_input = X
-
 		for i in range(N_LAYERS):
-			activations[i], output = layers[i].forward(train_input)
+			activations[i], _ = layers[i].forward(train_input)
 			train_input = activations[i]
+		""" import numpy as np
+  		activations[-1] = np.round(activations[-1]) """
 		if (loss_type == "r2"):
 			loss = f_r2score(y, activations[-1])
 		elif (loss_type == "mse"):
@@ -74,3 +67,43 @@ class Plot:
 		elif(loss_type == "mae"):
 			loss = f_mae(y, activations[-1])
 		return loss
+
+	def plot_acc_epochs(self):
+		""" Plot the accuracy over the epochs. """
+		
+		# Plotting the graph
+		plt.figure(figsize=(20, 12))
+		for acc, label, color, linestyle, epochs in zip(self.acc, self.label, self.color, self.linestyle, self.epochs):
+			epochs = list(range(1, epochs + 2))
+			plt.plot(epochs, acc, label=label + " loss", color=color, marker="", linestyle=linestyle)
+		plt.ylim(0, 1)
+
+		# Adding labels, title, and legend
+		plt.xlabel("Epochs", fontsize=14)
+		plt.ylabel("Accuracy", fontsize=14)
+		plt.title("Learning Curves", fontsize=16)
+		plt.legend(fontsize=12)
+		plt.grid(True)
+
+		# Show the plot
+		plt.show()
+
+	def plot_loss_epochs(self):
+		""" Plot the loss over the epochs. """
+		
+		# Plotting the graph
+		plt.figure(figsize=(20, 12))
+		for mse, label, color, linestyle, epochs in zip(self.mse, self.label, self.color, self.linestyle, self.epochs):
+			epochs = list(range(1, epochs + 2))
+			plt.plot(epochs, mse, label=label + " loss", color=color, marker="", linestyle=linestyle)
+		plt.ylim(0, 0.7)
+
+		# Adding labels, title, and legend
+		plt.xlabel("Epochs", fontsize=14)
+		plt.ylabel("Loss", fontsize=14)
+		plt.title("Learning Curves", fontsize=16)
+		plt.legend(fontsize=12)
+		plt.grid(True)
+
+		# Show the plot
+		plt.show()

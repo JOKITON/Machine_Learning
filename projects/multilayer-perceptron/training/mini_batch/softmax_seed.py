@@ -1,8 +1,8 @@
 """ Program that creates a Multilayer Perceptron model to detect type of cancer cells. """
 
-def init_mb_soft():
+def init_mb_soft_seed():
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
-    from config import EPOCHS_MINI_BATCH_2, LS_SOFTMAX_1, N_LAYERS, BATCH_SIZE
+    from config import EPOCHS_MINI_BATCH_2, LS_SOFTMAX_0, N_LAYERS, BATCH_SIZE
     import numpy as np
     from batch import get_batches, shuffle_batches, get_val_batches
     from preprocessing import get_train_test_pd
@@ -11,7 +11,8 @@ def init_mb_soft():
     from loss import f_r2score
 
     EPOCHS = EPOCHS_MINI_BATCH_2
-    LAYER_SHAPE = LS_SOFTMAX_1
+    LAYER_SHAPE = LS_SOFTMAX_0
+    LEARNING_RATE *= 2
 
     # Normalize the data
     X_train, y_train, X_test, y_test = get_train_test_pd()

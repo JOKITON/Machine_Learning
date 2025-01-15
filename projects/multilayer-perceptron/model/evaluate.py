@@ -4,12 +4,15 @@ from colorama import Fore, Back, Style
 from config import RESET_ALL
 
 def make_preds(layers, X, y):
+    import numpy as np
+
     activations = [None] * N_LAYERS
     training_test = X
     for i in range(N_LAYERS):
         activations[i], _ = layers[i].forward(training_test)
         training_test = activations[i]
 
+    """ activations[-1] = np.round(activations[-1]) """
     # MSE, MAE, r2 score
     mse = f_mse(y, activations[-1])
     mae = f_mae(y, activations[-1])
@@ -23,11 +26,11 @@ def print_preds(layers, X, y, bool_print):
 
     print()
     if (bool_print == 1):
-        print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "--> Training set" + RESET_ALL)
+        print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "👉🏼  Training set: " + RESET_ALL)
     elif (bool_print == 2):
-        print(Fore.LIGHTCYAN_EX + Style.BRIGHT + "--> Testing set" + RESET_ALL)
+        print(Fore.LIGHTCYAN_EX + Style.BRIGHT + "👉🏼  Testing set: " + RESET_ALL)
     elif (bool_print == 3):
-        print(Fore.LIGHTYELLOW_EX + Style.BRIGHT + "--> All the dataset" + RESET_ALL)
+        print(Fore.LIGHTYELLOW_EX + Style.BRIGHT + "👉🏼  The whole dataset: " + RESET_ALL)
     # print(f"MAE: {mae}")
     print(f"\tMSE: {mse:.5f}")
     print(f"\tCross-Entropy: {ce:.5f}")

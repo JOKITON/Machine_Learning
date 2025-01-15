@@ -15,8 +15,9 @@ class DenseLayer:
     activations = None
     # Backwward Propagation
     dinputs = None
+    nesterov = False
 
-    def __init__(self, n_inputs, n_neurons, actv, der_actv, seed=None):
+    def __init__(self, n_inputs, n_neurons, actv, der_actv, seed=None, velocity=False):
         """
         Initialize the Dense layer.
         
@@ -37,6 +38,11 @@ class DenseLayer:
 
         self.f_actv = actv
         self.f_der_actv = der_actv
+        
+        if (velocity == True):
+            self.velocity = np.zeros_like(self.weights)
+        else:
+            self.velocity = None
 
     def forward(self, inputs=None):
         """ 
@@ -55,7 +61,7 @@ class DenseLayer:
 
         return self.activations, self.output
 
-    def backward(self, yvalues, learning_rate):
+    def backward(self, yvalues, learning_rate, momentum=0):
         """ 
 		Perform backward propagation for the layer
   
@@ -63,15 +69,36 @@ class DenseLayer:
 		dvalues			- Gradient of the loss with respect to the output.
 		learning_rate	- The rate for gradient descent
         """
-        # Partial derivative of BCE loss respect to activations
+        # Partial derivative of BCE loss with respect to activations
         dactivation = self.activations - yvalues
 
         # Gradients with respect to weights, biases, and inputs
         dweights = np.dot(self.inputs.T, dactivation) / self.activations.shape[0]
         dbiases = np.sum(dactivation, axis=0, keepdims=True) / self.activations.shape[0]
 
+        # Gradient with respect to inputs
         self.dinputs = np.dot(dactivation, self.weights.T)
 
-        # Update weights and biases using gradient descent
-        self.weights -= learning_rate * dweights
+        # Update biases (biases usually don't use momentum)
         self.biases -= learning_rate * dbiases
+
+        # Initialize velocity if it's not provided (first call)
+        if self.velocity is None:
+            self.weights -= learning_rate * dweights
+        else: # Apply Nesterov Momentum
+            # Look ahead by applying momentum
+            lookahead_weights = self.weights + momentum * self.velocity
+
+            # Recompute gradients at the "look-ahead" weights
+            dweights = np.dot(self.inputs.T, dactivation) / self.activations.shape[0]
+
+            # Clip gradients
+            np.clip(dweights, -1, 1, out=dweights)
+            np.clip(dbiases, -1, 1, out=dbiases)
+
+            # Update velocity and weights
+            self.velocity = (momentum * self.velocity) - (learning_rate * dweights)
+            self.weights += self.velocity
+
+            # Return updated velocity to maintain state across iterations
+            return self.velocity

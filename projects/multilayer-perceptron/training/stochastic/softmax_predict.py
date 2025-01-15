@@ -1,14 +1,18 @@
 """ Program that creates a Multilayer Perceptron model to detect type of cancer cells. """
 
-def init_fb_sig_pred(layers):
+def init_st_soft_pred(layers):
     from config import N_LAYERS, RESET_ALL, Fore, Style
     from plot import Plot
-    from preprocessing import get_train_test_pd
+     
     from split_data import preprocess_data
+    import numpy as np
     
     # Make predictions based on the whole dataset
     pred_X, pred_y = preprocess_data()
     pred_y = pred_y.to_numpy().reshape(-1, 1)
+    
+    soft_y_pred = np.zeros((pred_y.shape[0], 2))
+    soft_y_pred[np.arange(pred_y.shape[0]), pred_y.flatten()] = 1
 
     print("\n└─> Choose an option: ")
     print("\t[1]" + Style.BRIGHT + " Use training & testing dataset " + RESET_ALL)
@@ -25,22 +29,29 @@ def init_fb_sig_pred(layers):
             if (dec_type == 1):
                 make_pred(layers)
             elif (dec_type == 2):
-                make_whole_pred(pred_X, pred_y, layers)
+                make_whole_pred(pred_X, soft_y_pred, layers)
             elif (dec_type == 3):
-                make_single_pred(pred_X, pred_y, layers)
+                make_single_pred(pred_X, soft_y_pred, layers)
             elif (dec_type == 4):
                 return
 
 def make_pred(layers):
     from evaluate import print_preds
     from preprocessing import get_train_test_pd
+    import numpy as np
 
     X_train, y_train, X_test, y_test = get_train_test_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
     y_test = y_test.to_numpy().reshape(-1, 1)
+    
+    y_train_softmax = np.zeros((y_train.shape[0], 2))
+    y_train_softmax[np.arange(y_train.shape[0]), y_train.flatten()] = 1
 
-    print_preds(layers, X_train, y_train, 1)
-    print_preds(layers, X_test, y_test, 2)
+    y_test_softmax = np.zeros((y_test.shape[0], 2))
+    y_test_softmax[np.arange(y_test.shape[0]), y_test.flatten()] = 1
+
+    print_preds(layers, X_train, y_train_softmax, 1)
+    print_preds(layers, X_test, y_test_softmax, 2)
 
 def make_whole_pred(pred_X, pred_y, layers):
     from config import N_LAYERS
@@ -53,7 +64,7 @@ def make_whole_pred(pred_X, pred_y, layers):
     for i in range(N_LAYERS):
         activations[i], _ = layers[i].forward(train_input)
         train_input = activations[i]
-        
+
     print_preds(layers, pred_X, pred_y, 3)
 
 def make_single_pred(pred_X, pred_y, layers):
@@ -85,15 +96,18 @@ def make_single_pred(pred_X, pred_y, layers):
     guess = 0
     to_guess = main_str - 2
     guess = activations[-1][to_guess]
+
+    # We need to round the value to make a prediction
     guess = np.round(guess)
-    if (pred_y[to_guess] == guess):
+
+    if (pred_y[to_guess][0] == guess[0] and pred_y[to_guess][1] == guess[1]):
         print("Correct prediction!")
     else:
         print("Incorrect prediction...")
-    if (guess > 0.5):
-        guess = "B"
-    else:
+    if (guess[0] > 0.5):
         guess = "M"
+    else:
+        guess = "B"
     print(f"[{to_guess + 2}]: {guess}\n")
 
     # print_preds(layers, pred_X, pred_y, 3)

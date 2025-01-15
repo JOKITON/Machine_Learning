@@ -3,7 +3,7 @@
 def init_fb_soft_pred(layers):
     from config import N_LAYERS, RESET_ALL, Fore, Style
     from plot import Plot
-    from plots import plot_acc_epochs, plot_loss_epochs
+     
     from preprocessing import get_train_test_pd
     from split_data import preprocess_data
     import numpy as np
@@ -70,6 +70,7 @@ def make_whole_pred(pred_X, pred_y, layers):
 
 def make_single_pred(pred_X, pred_y, layers):
     from config import N_LAYERS, RESET_ALL, Fore, Style
+    import numpy as np
 
     activations = [None] * N_LAYERS
 
@@ -82,7 +83,7 @@ def make_single_pred(pred_X, pred_y, layers):
             continue
         else:
             main_str = int(main_str)
-            if (main_str < 0 or main_str > len(pred_X)):
+            if (main_str < 2 or main_str > len(pred_X) + 1):
                 print(Fore.RED + Style.DIM + "Invalid input. Please try again." + RESET_ALL)
             else:
                 break
@@ -94,14 +95,17 @@ def make_single_pred(pred_X, pred_y, layers):
         train_input = activations[i]
 
     guess = 0
-    to_guess = main_str
-    for i in range(len(activations[-1])):
-        if (i == to_guess):
-            guess = activations[-1][i]
+    to_guess = main_str - 2
+    guess = activations[-1][to_guess]
+    guess = np.round(guess)
+    if (pred_y[to_guess][0] == guess[0] and pred_y[to_guess][1] == guess[1]):
+        print("Correct prediction!")
+    else:
+        print("Incorrect prediction...")
     if (guess[0] > 0.5):
         guess = "M"
     else:
         guess = "B"
-    print(f"Prediction: {guess}")
+    print(f"[{to_guess + 2}]: {guess}\n")
 
     # print_preds(layers, pred_X, pred_y, 3)

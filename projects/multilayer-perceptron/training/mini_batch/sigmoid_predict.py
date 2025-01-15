@@ -1,8 +1,9 @@
 """ Program that creates a Multilayer Perceptron model to detect type of cancer cells. """
 
-def init_fb_sig_pred(layers):
+def init_mb_sig_pred(layers):
     from config import N_LAYERS, RESET_ALL, Fore, Style
     from plot import Plot
+     
     from preprocessing import get_train_test_pd
     from split_data import preprocess_data
     

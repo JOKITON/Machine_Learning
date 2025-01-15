@@ -2,7 +2,7 @@
 
 def init_fb_sig_seed():
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
-    from config import EPOCHS_FBATCH_3, LS_SIGMOID_2, N_LAYERS, BATCH_SIZE
+    from config import EPOCHS_FBATCH_3, LS_SIGMOID_0, N_LAYERS, BATCH_SIZE
     from preprocessing import get_train_test_pd
     from activations import sigmoid, der_sigmoid
     from loss import f_r2score
@@ -10,7 +10,8 @@ def init_fb_sig_seed():
     from setup import setup_layers
 
     EPOCHS = EPOCHS_FBATCH_3
-    LAYER_SHAPE = LS_SIGMOID_2
+    LAYER_SHAPE = LS_SIGMOID_0
+    LEARNING_RATE *= 4.5
 
     # Normalize the data
     X_train, y_train, X_test, y_test = get_train_test_pd()

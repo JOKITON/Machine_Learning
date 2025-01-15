@@ -1,9 +1,9 @@
 """ Program that creates a Multilayer Perceptron model to detect type of cancer cells. """
 
-def init_mb_sig():
+def init_mb_sig_seed():
     import config
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
-    from config import EPOCHS_MINI_BATCH_3, LS_SIGMOID_2, N_LAYERS, BATCH_SIZE
+    from config import EPOCHS_MINI_BATCH_2, LS_SIGMOID_0, N_LAYERS, BATCH_SIZE
     from preprocessing import get_train_test_pd
     from batch import get_batches, shuffle_batches, get_val_batches
     from activations import sigmoid, relu, der_sigmoid, der_relu, leaky_relu, der_leaky_relu, tanh, der_tanh, softmax, der_softmax
@@ -11,8 +11,9 @@ def init_mb_sig():
     import numpy as np
     from setup import setup_layers
 
-    EPOCHS = EPOCHS_MINI_BATCH_3
-    LAYER_SHAPE = LS_SIGMOID_2
+    EPOCHS = EPOCHS_MINI_BATCH_2
+    LAYER_SHAPE = LS_SIGMOID_0
+    LEARNING_RATE *= 2
 
     # Normalize the data
     X_train, y_train, X_test, y_test = get_train_test_pd()

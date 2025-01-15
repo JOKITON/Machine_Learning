@@ -1,8 +1,8 @@
 """ Program that creates a Multilayer Perceptron model to detect type of cancer cells. """
 
-def init_st_soft():
-    from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
-    from config import N_FEATURES, EPOCHS_STOCHASTIC_2, LS_SOFTMAX_1, N_LAYERS, BATCH_SIZE, DF_UTILS
+def init_st_soft_seed():
+    from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD, MOMENTUM
+    from config import N_FEATURES, EPOCHS_STOCHASTIC_2, LS_SOFTMAX_1, N_LAYERS
     import numpy as np
     from preprocessing import get_train_test_pd
     from batch import get_stochastic
@@ -12,6 +12,7 @@ def init_st_soft():
 
     EPOCHS = EPOCHS_STOCHASTIC_2
     LAYER_SHAPE = LS_SOFTMAX_1
+    LEARNING_RATE = LEARNING_RATE * 0.3
 
     # Normalize the data
     X_train, y_train, X_test, y_test = get_train_test_pd()
@@ -21,7 +22,7 @@ def init_st_soft():
     b_epoch = 0
     b_acc = 0
     seed = np.random.randint(0, 1000000000)
-    layers = setup_layers(softmax, der_softmax, LAYER_SHAPE, seed)
+    layers = setup_layers(softmax, der_softmax, LAYER_SHAPE, seed, velocity=True)
 
     activations = [None] * N_LAYERS
 
@@ -65,6 +66,6 @@ def init_st_soft():
                 input_y = y_true_one_hot
             else:
                 input_y = train_y
-            layers[i].backward(input_y, LEARNING_RATE)
+            layers[i].backward(input_y, LEARNING_RATE, MOMENTUM)
     
     return seed, b_acc, b_epoch

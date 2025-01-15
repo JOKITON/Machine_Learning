@@ -1,22 +1,20 @@
 """ Program that creates a Multilayer Perceptron model to detect type of cancer cells. """
 
-def init_mb_sig():
-    import config
+def init_mb_sig(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
-    from config import EPOCHS_MINI_BATCH_2, LS_SIGMOID_2, N_LAYERS, BATCH_SIZE, SEED_MB_SIG
-    from colorama import Fore, Back, Style
+    from config import EPOCHS_MINI_BATCH_2, LS_SIGMOID_0, N_LAYERS, BATCH_SIZE, SEED_MB_SIG
     from preprocessing import get_train_test_pd
-    from activations import sigmoid, relu, der_sigmoid, der_relu, leaky_relu, der_leaky_relu, tanh, der_tanh, softmax, der_softmax
+    from activations import sigmoid, der_sigmoid
     from plot import Plot
-    from plots import plot_acc_epochs, plot_loss_epochs
     from setup import setup_layers
-    from evaluate import make_preds
     from evaluate import print_preds
+    from batch import get_batches, shuffle_batches, get_val_batches
     import json
 
-    RESET_ALL = Fore.RESET + Back.RESET + Style.RESET_ALL
     EPOCHS = EPOCHS_MINI_BATCH_2
-    LAYER_SHAPE = LS_SIGMOID_2
+    LAYER_SHAPE = LS_SIGMOID_0
+    COUNT_PLOT = plt_ct
+    LEARNING_RATE *= 2
 
     # Normalize the data
     X_train, y_train, X_test, y_test = get_train_test_pd()
@@ -26,33 +24,49 @@ def init_mb_sig():
     with open(SEED_MB_SIG, 'r') as file:
         data = json.load(file)
         seed = int(data['seed'])
-        epochs = int(data['epoch'])
+        EPOCHS = int(data['epoch'])
 
     layers = setup_layers(sigmoid, der_sigmoid, LAYER_SHAPE, seed)
 
     activations = [None] * N_LAYERS
 
-    plot = Plot(X_train, X_test, y_train, y_test, epochs)
+    if (plt == None):
+        plt = Plot(COUNT_PLOT)
+    plt.set_plot_config("Training", "indigo", plt_it, "-", EPOCHS)
+    plt.set_error_data(X_train, y_train, layers, plt_it)
+    plt.set_plot_config("Validation", "peru", plt_it + 1, "--", EPOCHS)
+    plt.set_error_data(X_test, y_test, layers, plt_it + 1)
 
-    for epoch in range(epochs):
+    train_x, train_y = get_batches(X_train, y_train, BATCH_SIZE)
+
+    for epoch in range(EPOCHS):
         # Forward propagation
         if epoch % STEP_SIZE == 0:
             LEARNING_RATE *= DECAY_RATE
-        acc_train, mse_train, mae_train = plot.append_preds(layers)
+
+        plt.set_error_data(X_train, y_train, layers, plt_it)
+        plt.set_error_data(X_test, y_test, layers, plt_it + 1)
+        acc_train, mse_train, _ = plt.get_error_data(plt_it)
         
         if (epoch % 100 == 0):
             print(f"Epoch: {epoch}", "MSE: ", f"{mse_train:.5f}", "R2: ", f"{acc_train:.5f}")
 
-        train_input = X_train
+        batch_X, batch_Y = get_val_batches(train_x, train_y, layers, epoch)
         for i in range(N_LAYERS):
-            activations[i], output = layers[i].forward(train_input)
-            train_input = activations[i]
+            activations[i], _ = layers[i].forward(batch_X)
+            batch_X = activations[i]
 
         for i in reversed(range(N_LAYERS)):
-            layers[i].backward(y_train, LEARNING_RATE)
+            layers[i].backward(batch_Y, LEARNING_RATE)
 
-    plot_acc_epochs(plot.acc_train, plot.acc_test, epochs)
-    plot_loss_epochs(plot.mse_train, plot.mse_test, epochs)
+    if (plt_show):
+        plt.plot_acc_epochs()
+        plt.plot_loss_epochs()
 
     print_preds(layers, X_train, y_train, 1)
     print_preds(layers, X_test, y_test, 2)
+    
+    if (plt_ret):
+        return layers, plt
+    else:
+        return layers

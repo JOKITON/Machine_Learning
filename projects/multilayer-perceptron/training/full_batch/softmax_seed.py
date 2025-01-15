@@ -2,15 +2,16 @@
 
 def init_fb_soft_seed():
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
-    from config import EPOCHS_FBATCH_3, LS_SOFTMAX_2, N_LAYERS
+    from config import EPOCHS_FBATCH_2, LS_SOFTMAX_0, N_LAYERS
     from preprocessing import get_train_test_pd
     from activations import softmax, der_softmax
     from loss import f_r2score
     import numpy as np
     from setup import setup_layers
 
-    EPOCHS = EPOCHS_FBATCH_3
-    LAYER_SHAPE = LS_SOFTMAX_2
+    EPOCHS = EPOCHS_FBATCH_2
+    LAYER_SHAPE = LS_SOFTMAX_0
+    LEARNING_RATE *= 7.5
 
     # Normalize the data
     X_train, y_train, X_test, y_test = get_train_test_pd()

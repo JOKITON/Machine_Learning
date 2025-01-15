@@ -190,6 +190,7 @@ def choose_model():
     print("\n└─> Which activation function do you want to use?")
     print("\t[1]" + Style.BRIGHT + " Softmax " + RESET_ALL)
     print("\t[2]" + Style.BRIGHT + " Sigmoid " + RESET_ALL)
+    print("\t[3]" + Style.BRIGHT + " Go back ↑" + RESET_ALL)
     while 1:
         str3 = input(Style.BRIGHT + Fore.LIGHTCYAN_EX + "└─> " + Fore.RESET)
         print(RESET_ALL)
@@ -198,16 +199,51 @@ def choose_model():
             if f_actv == 1 or f_actv == 2:
                 func(f_actv)
                 break
+            elif (f_actv == 3):
+                return 1
         print(
             Fore.RED + Style.DIM + "Invalid input. Please try again." + RESET_ALL)
         continue
     return 0
+
+def plot_graph():
+    layers : DenseLayer = None
+    while 1:
+        print("\n└─> Choose an option: ")
+        print("\t[1]" + Style.BRIGHT + " FB Softmax vs. MB Softmax " + RESET_ALL)
+        print("\t[2]" + Style.BRIGHT + " FB Sigmoid vs MB Softmax " + RESET_ALL)
+        print("\t[3]" + Style.BRIGHT + " ST Sigmoid vs MB Sigmoid " + RESET_ALL)
+        print("\t[4]" + Style.BRIGHT + " Go back ↑" + RESET_ALL)
+        dec_type = input(Style.BRIGHT + Fore.LIGHTCYAN_EX + "└─> " + Fore.RESET)
+        print(RESET_ALL)
+        if (dec_type.isdigit() == False):
+            print(Fore.RED + Style.DIM + "Invalid input. Please try again." + RESET_ALL)
+            continue
+        else:
+            dec_type = int(dec_type)
+            if dec_type == 1:
+                _, plt = init_fb_soft(plt=None, plt_it=0, plt_ct=4, plt_show=False, plt_ret=True)
+                _ = init_mb_soft(plt=plt, plt_it=2, plt_show=True, plt_ret=False)
+                
+            elif dec_type == 2:
+                _, plt = init_fb_sig(plt=None, plt_it=0, plt_ct=4, plt_show=False, plt_ret=True)
+                _ = init_mb_soft(plt=plt, plt_it=2, plt_show=True, plt_ret=False)
+            elif dec_type == 3:
+                _, plt = init_st_sig(plt=None, plt_it=0, plt_ct=4, plt_show=False, plt_ret=True)
+                _ = init_mb_sig(plt=plt, plt_it=2, plt_show=True, plt_ret=False)
+            elif dec_type == 4:
+                return 1
+            else:
+                print(Fore.RED + Style.DIM + "Invalid input. Please try again." + RESET_ALL)
+                continue
+    return
 
 def main():
     print("\n└─> Choose an option: (" + Fore.LIGHTWHITE_EX + Style.BRIGHT
                 + "only numbers" + RESET_ALL + "): ")
     print("\t[1]" + Style.BRIGHT + " Assemble " + RESET_ALL + "data" + RESET_ALL)
     print("\t[2]" + Style.BRIGHT + " Choose " + RESET_ALL + "the model" + RESET_ALL)
+    print("\t[3]" + Fore.MAGENTA + " Bonus " + RESET_ALL + "options")
     while 1:
         str1 = input(Style.BRIGHT + Fore.LIGHTCYAN_EX + "└─> " + Fore.RESET)
         print(RESET_ALL)
@@ -225,6 +261,17 @@ def main():
                         + "only numbers" + RESET_ALL + "): ")
                     print("\t[1]" + Style.BRIGHT + " Split " + RESET_ALL + "data" + RESET_ALL)
                     print("\t[2]" + Style.BRIGHT + " Train " + RESET_ALL + "the model" + RESET_ALL)
+                    print("\t[3]" + Fore.MAGENTA + " Bonus " + RESET_ALL + "options")
+            elif option == 3:
+                ret = plot_graph()
+                if ret == 0:
+                    break
+                else:
+                    print("\n└─> Choose an option: (" + Fore.LIGHTWHITE_EX + Style.BRIGHT
+                        + "only numbers" + RESET_ALL + "): ")
+                    print("\t[1]" + Style.BRIGHT + " Split " + RESET_ALL + "data" + RESET_ALL)
+                    print("\t[2]" + Style.BRIGHT + " Train " + RESET_ALL + "the model" + RESET_ALL)
+                    print("\t[3]" + Fore.MAGENTA + " Bonus " + RESET_ALL + "options")
         else:
             print(
                 Fore.RED + Style.DIM + "Invalid input. Please try again." + RESET_ALL)

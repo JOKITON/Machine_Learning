@@ -1,7 +1,7 @@
 """ Program that creates a Multilayer Perceptron model to detect type of cancer cells. """
 
-def init_st_sig():
-    from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
+def init_st_sig_seed():
+    from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD, MOMENTUM
     from config import N_FEATURES, EPOCHS_STOCHASTIC_2, LS_SIGMOID_1, N_LAYERS, BATCH_SIZE, DF_UTILS
     from preprocessing import get_train_test_pd
     from batch import get_stochastic
@@ -12,6 +12,7 @@ def init_st_sig():
 
     EPOCHS = EPOCHS_STOCHASTIC_2
     LAYER_SHAPE = LS_SIGMOID_1
+    LEARNING_RATE = LEARNING_RATE * 0.3
 
     # Normalize the data
     X_train, y_train, X_test, y_test = get_train_test_pd()
@@ -21,7 +22,7 @@ def init_st_sig():
     b_epoch = 0
     b_acc = 0
     seed = np.random.randint(0, 1000000000)
-    layers = setup_layers(sigmoid, der_sigmoid, LAYER_SHAPE, seed)
+    layers = setup_layers(sigmoid, der_sigmoid, LAYER_SHAPE, seed, velocity=True)
 
     activations = [None] * N_LAYERS
 
@@ -53,6 +54,6 @@ def init_st_sig():
             train_x = activations[i]
 
         for i in reversed(range(N_LAYERS)):
-            layers[i].backward(train_y, LEARNING_RATE)
+            layers[i].backward(train_y, LEARNING_RATE, MOMENTUM)
 
     return seed, b_acc, b_epoch
