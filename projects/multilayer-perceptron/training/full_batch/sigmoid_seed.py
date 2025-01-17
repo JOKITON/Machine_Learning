@@ -3,7 +3,7 @@
 def init_fb_sig_seed():
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
     from config import EPOCHS_FBATCH_3, LS_SIGMOID_0, N_LAYERS, BATCH_SIZE
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
     from activations import sigmoid, der_sigmoid
     from loss import f_r2score
     import numpy as np
@@ -14,9 +14,9 @@ def init_fb_sig_seed():
     LEARNING_RATE *= 4.5
 
     # Normalize the data
-    X_train, y_train, X_test, y_test = get_train_test_pd()
+    X_train, y_train, X_val, y_val = get_train_val_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
-    y_test = y_test.to_numpy().reshape(-1, 1)
+    y_val = y_val.to_numpy().reshape(-1, 1)
 
     b_epoch = 0
     b_acc = 0
@@ -37,15 +37,15 @@ def init_fb_sig_seed():
                 input_train = activations[i]
             acc_train = f_r2score(y_train, activations[-1])
                 
-            input_train = X_test
+            input_train = X_val
             for i in range(N_LAYERS):
                 activations[i], _ = layers[i].forward(input_train)
                 input_train = activations[i]
-            acc_test = f_r2score(y_test, activations[-1])
+            acc_val = f_r2score(y_val, activations[-1])
 
-            if (acc_train + acc_test > b_acc):
+            if (acc_train + acc_val > b_acc):
                 b_epoch = epoch
-                b_acc = acc_train + acc_test
+                b_acc = acc_train + acc_val
         train_input = X_train
         for i in range(N_LAYERS):
             activations[i], _ = layers[i].forward(train_input)

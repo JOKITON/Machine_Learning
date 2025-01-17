@@ -1,5 +1,5 @@
 import config
-from config import RESET_ALL, N_FEATURES, ML_TRAIN_X, ML_TRAIN_Y, ML_TEST_X, ML_TEST_Y
+from config import RESET_ALL, N_FEATURES, ML_TRAIN_X, ML_TRAIN_Y, ML_VALIDATION_X, ML_VALIDATION_Y
 from config import N_FEATURES
 import pandas as pd
 from colorama import Fore, Back, Style
@@ -11,6 +11,7 @@ import os
 def preprocess_data():
     # Load the dataset
     df = pd.read_csv(config.ML_CLEAN_DATASET)
+    print(type(df))
     # Drop unnecessary columns
     df.drop(columns=['id'], inplace=True)
 
@@ -31,21 +32,21 @@ def preprocess_data():
     return X, y
 
 def split_data(X, y):
-    # Split into training and test sets
+    # Split into training and validation sets
     print(Fore.GREEN + Style.DIM
         + "Splitting the dataset into training and test sets... (80/20)\n" + RESET_ALL)
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_train, X_val, y_train, y_val = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y)
     
-    return X_train, X_test, y_train, y_test
+    return X_train, X_val, y_train, y_val
 
-def save_data(X_train, X_test, y_train, y_test):
-    # Assuming X_train and X_test are NumPy arrays
+def save_data(X_train, X_val, y_train, y_val):
+    # Assuming X_train and X_val are NumPy arrays
     X_train_df = pd.DataFrame(X_train)
     y_train_df = pd.DataFrame(y_train)
 
-    X_test_df = pd.DataFrame(X_test)
-    y_test_df = pd.DataFrame(y_test)
+    X_val_df = pd.DataFrame(X_val)
+    y_val_df = pd.DataFrame(y_val)
 
     # Check if the files already exist before creating them
 
@@ -61,17 +62,17 @@ def save_data(X_train, X_test, y_train, y_test):
         y_train_df.to_csv(ML_TRAIN_Y, index=False)
         print("📥 y_train saved to CSV files.")
 
-    if os.path.exists(ML_TEST_X):
-        print(f"📫 {ML_TEST_X} already exists. Skipping save.")
+    if os.path.exists(ML_VALIDATION_X):
+        print(f"📫 {ML_VALIDATION_X} already exists. Skipping save.")
     else:
-        X_test_df.to_csv(ML_TEST_X, index=False)
-        print("📥 X_test saved to CSV files.")
+        X_val_df.to_csv(ML_VALIDATION_X, index=False)
+        print("📥 X_val saved to CSV files.")
 
-    if os.path.exists(ML_TEST_Y):
-        print(f"📫 {ML_TEST_Y} already exists. Skipping save.")
+    if os.path.exists(ML_VALIDATION_Y):
+        print(f"📫 {ML_VALIDATION_Y} already exists. Skipping save.")
     else:
-        y_test_df.to_csv(ML_TEST_Y, index=False)
-        print("📥 y_test saved to CSV files.")
+        y_val_df.to_csv(ML_VALIDATION_Y, index=False)
+        print("📥 y_val saved to CSV files.")
     """ 
     print(
         "📩 File location : " + config.ML_PROCCESED + "") """
@@ -79,5 +80,5 @@ def save_data(X_train, X_test, y_train, y_test):
 
 def assemble_data():
     X, y = preprocess_data()
-    X_train, X_test, y_train, y_test = split_data(X, y)
-    save_data(X_train, X_test, y_train, y_test)
+    X_train, X_val, y_train, y_val = split_data(X, y)
+    save_data(X_train, X_val, y_train, y_val)

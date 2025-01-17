@@ -4,7 +4,7 @@ def init_mb_soft_pred(layers):
     from config import N_LAYERS, RESET_ALL, Fore, Style
     from plot import Plot
      
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
     from split_data import preprocess_data
     import numpy as np
     
@@ -16,7 +16,7 @@ def init_mb_soft_pred(layers):
     soft_y_pred[np.arange(pred_y.shape[0]), pred_y.flatten()] = 1
 
     print("\n└─> Choose an option: ")
-    print("\t[1]" + Style.BRIGHT + " Use training & testing dataset " + RESET_ALL)
+    print("\t[1]" + Style.BRIGHT + " Use training & validation dataset " + RESET_ALL)
     print("\t[2]" + Style.BRIGHT + " Use the whole dataset" + RESET_ALL)
     print("\t[3]" + Style.BRIGHT + " Predict a single row from 'data.csv' " + RESET_ALL)
     print("\t[4]" + Style.BRIGHT + " Go back ↑" + RESET_ALL)
@@ -38,21 +38,21 @@ def init_mb_soft_pred(layers):
 
 def make_pred(layers):
     from evaluate import print_preds
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
     import numpy as np
 
-    X_train, y_train, X_test, y_test = get_train_test_pd()
+    X_train, y_train, X_val, y_val = get_train_val_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
-    y_test = y_test.to_numpy().reshape(-1, 1)
+    y_val = y_val.to_numpy().reshape(-1, 1)
     
     y_train_softmax = np.zeros((y_train.shape[0], 2))
     y_train_softmax[np.arange(y_train.shape[0]), y_train.flatten()] = 1
 
-    y_test_softmax = np.zeros((y_test.shape[0], 2))
-    y_test_softmax[np.arange(y_test.shape[0]), y_test.flatten()] = 1
+    y_val_softmax = np.zeros((y_val.shape[0], 2))
+    y_val_softmax[np.arange(y_val.shape[0]), y_val.flatten()] = 1
 
     print_preds(layers, X_train, y_train_softmax, 1)
-    print_preds(layers, X_test, y_test_softmax, 2)
+    print_preds(layers, X_val, y_val_softmax, 2)
 
 def make_whole_pred(pred_X, pred_y, layers):
     from config import N_LAYERS

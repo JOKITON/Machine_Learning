@@ -17,6 +17,8 @@ class Plot:
 
 		self.mae = [[] for _ in range(data_count)]
   
+		self.ce = [[] for _ in range(data_count)]
+  
 		# Plot configurations
 		self.label = ["" for _ in range(data_count)]
 		self.color = ["" for _ in range(data_count)]
@@ -35,9 +37,22 @@ class Plot:
 		self.append_f_mae(X, y, layers, pos)
 		self.append_f_mse(X, y, layers, pos)
 		self.append_f_r2score(X, y, layers, pos)
+		self.append_f_cross_entropy(X, y, layers, pos)
 
 	def get_error_data(self, pos):
-		return self.acc[pos][-1], self.mse[pos][-1], self.mae[pos][-1]
+		return self.acc[pos][-1], self.mse[pos][-1], self.mae[pos][-1], self.ce[pos][-1]
+
+	def bool_early_stop(self, pos, epoch, patience=5):
+		if (epoch < 100):
+			return False
+		if len(self.ce[pos]) > patience:
+			recent_losses = self.ce[pos][-patience:]
+			if all(recent_losses[i] <= recent_losses[i + 1] for i in range(len(recent_losses) - 1)):
+				self.epochs[pos] = epoch + 1
+				self.epochs[pos - 1] = epoch + 1
+				print("Early stopping...")
+				return True
+		return False
 
 	def append_f_mse(self, X, y, layers, pos):
 		mse_data = self.get_plot_data(X, y, layers, "mse")
@@ -50,6 +65,10 @@ class Plot:
 	def append_f_r2score(self, X, y, layers, pos):
 		r2_data = self.get_plot_data(X, y, layers, "r2")
 		self.acc[pos].append(r2_data)
+
+	def append_f_cross_entropy(self, X, y, layers, pos):
+		ce_data = self.get_plot_data(X, y, layers, "cross_entropy")
+		self.ce[pos].append(ce_data)
 
 	def get_plot_data(self, X, y, layers, loss_type):
 		activations = [None] * N_LAYERS
@@ -66,6 +85,8 @@ class Plot:
 			loss = f_mse(y, activations[-1])
 		elif(loss_type == "mae"):
 			loss = f_mae(y, activations[-1])
+		elif(loss_type == "cross_entropy"):
+			loss = f_cross_entropy(y, activations[-1])
 		return loss
 
 	def plot_acc_epochs(self):

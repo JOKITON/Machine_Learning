@@ -4,7 +4,7 @@ def init_mb_sig_pred(layers):
     from config import N_LAYERS, RESET_ALL, Fore, Style
     from plot import Plot
      
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
     from split_data import preprocess_data
     
     # Make predictions based on the whole dataset
@@ -12,7 +12,7 @@ def init_mb_sig_pred(layers):
     pred_y = pred_y.to_numpy().reshape(-1, 1)
 
     print("\n└─> Choose an option: ")
-    print("\t[1]" + Style.BRIGHT + " Use training & testing dataset " + RESET_ALL)
+    print("\t[1]" + Style.BRIGHT + " Use training & validation dataset " + RESET_ALL)
     print("\t[2]" + Style.BRIGHT + " Use the whole dataset" + RESET_ALL)
     print("\t[3]" + Style.BRIGHT + " Predict a single row from 'data.csv' " + RESET_ALL)
     print("\t[4]" + Style.BRIGHT + " Go back ↑" + RESET_ALL)
@@ -34,14 +34,14 @@ def init_mb_sig_pred(layers):
 
 def make_pred(layers):
     from evaluate import print_preds
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
 
-    X_train, y_train, X_test, y_test = get_train_test_pd()
+    X_train, y_train, X_val, y_val = get_train_val_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
-    y_test = y_test.to_numpy().reshape(-1, 1)
+    y_val = y_val.to_numpy().reshape(-1, 1)
 
     print_preds(layers, X_train, y_train, 1)
-    print_preds(layers, X_test, y_test, 2)
+    print_preds(layers, X_val, y_val, 2)
 
 def make_whole_pred(pred_X, pred_y, layers):
     from config import N_LAYERS

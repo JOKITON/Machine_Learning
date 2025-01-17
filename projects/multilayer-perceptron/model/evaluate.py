@@ -7,10 +7,10 @@ def make_preds(layers, X, y):
     import numpy as np
 
     activations = [None] * N_LAYERS
-    training_test = X
+    input_train = X
     for i in range(N_LAYERS):
-        activations[i], _ = layers[i].forward(training_test)
-        training_test = activations[i]
+        activations[i], _ = layers[i].forward(input_train)
+        input_train = activations[i]
 
     """ activations[-1] = np.round(activations[-1]) """
     # MSE, MAE, r2 score
@@ -28,7 +28,7 @@ def print_preds(layers, X, y, bool_print):
     if (bool_print == 1):
         print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "👉🏼  Training set: " + RESET_ALL)
     elif (bool_print == 2):
-        print(Fore.LIGHTCYAN_EX + Style.BRIGHT + "👉🏼  Testing set: " + RESET_ALL)
+        print(Fore.LIGHTCYAN_EX + Style.BRIGHT + "👉🏼  Validation set: " + RESET_ALL)
     elif (bool_print == 3):
         print(Fore.LIGHTYELLOW_EX + Style.BRIGHT + "👉🏼  The whole dataset: " + RESET_ALL)
     # print(f"MAE: {mae}")

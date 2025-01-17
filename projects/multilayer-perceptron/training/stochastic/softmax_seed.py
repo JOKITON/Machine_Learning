@@ -4,7 +4,7 @@ def init_st_soft_seed():
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD, MOMENTUM
     from config import N_FEATURES, EPOCHS_STOCHASTIC_2, LS_SOFTMAX_1, N_LAYERS
     import numpy as np
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
     from batch import get_stochastic
     from activations import softmax, der_softmax
     from setup import setup_layers
@@ -15,9 +15,9 @@ def init_st_soft_seed():
     LEARNING_RATE = LEARNING_RATE * 0.3
 
     # Normalize the data
-    X_train, y_train, X_test, y_test = get_train_test_pd()
+    X_train, y_train, X_val, y_val = get_train_val_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
-    y_test = y_test.to_numpy().reshape(-1, 1)
+    y_val = y_val.to_numpy().reshape(-1, 1)
     
     b_epoch = 0
     b_acc = 0
@@ -29,8 +29,8 @@ def init_st_soft_seed():
     y_train_softmax = np.zeros((y_train.shape[0], 2))
     y_train_softmax[np.arange(y_train.shape[0]), y_train.flatten()] = 1
 
-    y_test_softmax = np.zeros((y_test.shape[0], 2))
-    y_test_softmax[np.arange(y_test.shape[0]), y_test.flatten()] = 1
+    y_val_softmax = np.zeros((y_val.shape[0], 2))
+    y_val_softmax[np.arange(y_val.shape[0]), y_val.flatten()] = 1
 
     for epoch in range(EPOCHS):
         # Forward propagation
@@ -44,15 +44,15 @@ def init_st_soft_seed():
                 input_train = activations[i]
             acc_train = f_r2score(y_train_softmax, activations[-1])
                 
-            input_train = X_test
+            input_train = X_val
             for i in range(N_LAYERS):
                 activations[i], _ = layers[i].forward(input_train)
                 input_train = activations[i]
-            acc_test = f_r2score(y_test_softmax, activations[-1])
+            acc_val = f_r2score(y_val_softmax, activations[-1])
             
-            if (acc_train + acc_test > b_acc):
+            if (acc_train + acc_val > b_acc):
                 b_epoch = epoch
-                b_acc = acc_train + acc_test
+                b_acc = acc_train + acc_val
 
         train_x, train_y = get_stochastic(X_train, y_train)
         for i in range(N_LAYERS):

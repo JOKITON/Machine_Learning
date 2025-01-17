@@ -55,7 +55,7 @@ LAMBDA_REG = 0.01
 # General model parameters
 N_FEATURES = 30
 N_NEURONS = 32
-N_HIDDEN_LAYERS = 2 
+N_HIDDEN_LAYERS = 2
 N_LAYERS = 2 + N_HIDDEN_LAYERS
 
 # Leak ReLU + Sigmoid
@@ -88,11 +88,11 @@ ML_TRAIN_X = os.path.join(PWD,
 ML_TRAIN_Y = os.path.join(PWD,
 	'data/processed/y_train.csv')
 
-ML_TEST_X = os.path.join(PWD,
-	'data/processed/X_test.csv')
+ML_VALIDATION_X = os.path.join(PWD,
+	'data/processed/X_val.csv')
 
-ML_TEST_Y = os.path.join(PWD,
-	'data/processed/y_test.csv')
+ML_VALIDATION_Y = os.path.join(PWD,
+	'data/processed/y_val.csv')
 
 SEED_MB_SOFT = os.path.join(PWD,
 	'data/seeds/seed_mb_soft.json')

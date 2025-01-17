@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from colorama import Fore, Back, Style
 from config import N_LAYERS
-from config import RESET_ALL, ML_TRAIN_X, ML_TRAIN_Y, ML_TEST_X, ML_TEST_Y
+from config import RESET_ALL, ML_TRAIN_X, ML_TRAIN_Y, ML_VALIDATION_X, ML_VALIDATION_Y
 from loss import f_cross_entropy, f_r2score
 
 RESET_ALL = Fore.RESET + Back.RESET + Style.RESET_ALL
@@ -56,10 +56,10 @@ def handle_nan_values(df):
     # print("Columns with NaN values after filling with 0:")
     # print(df[df.columns[df.isnull().any()]].isnull().sum())
 
-def get_train_test_pd():
-    """ Load the training and testing data. """
+def get_train_val_pd():
+    """ Load the training and validation datasets. """
     X_train = pd.read_csv(ML_TRAIN_X)
     y_train = pd.read_csv(ML_TRAIN_Y)
-    X_test = pd.read_csv(ML_TEST_X)
-    y_test = pd.read_csv(ML_TEST_Y)
-    return X_train, y_train, X_test, y_test
+    X_val = pd.read_csv(ML_VALIDATION_X)
+    y_val = pd.read_csv(ML_VALIDATION_Y)
+    return X_train, y_train, X_val, y_val

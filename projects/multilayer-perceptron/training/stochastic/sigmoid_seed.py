@@ -3,7 +3,7 @@
 def init_st_sig_seed():
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD, MOMENTUM
     from config import N_FEATURES, EPOCHS_STOCHASTIC_2, LS_SIGMOID_1, N_LAYERS, BATCH_SIZE, DF_UTILS
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
     from batch import get_stochastic
     from activations import sigmoid, der_sigmoid
     from setup import setup_layers
@@ -15,9 +15,9 @@ def init_st_sig_seed():
     LEARNING_RATE = LEARNING_RATE * 0.3
 
     # Normalize the data
-    X_train, y_train, X_test, y_test = get_train_test_pd()
+    X_train, y_train, X_val, y_val = get_train_val_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
-    y_test = y_test.to_numpy().reshape(-1, 1)
+    y_val = y_val.to_numpy().reshape(-1, 1)
     
     b_epoch = 0
     b_acc = 0
@@ -38,15 +38,15 @@ def init_st_sig_seed():
                 input_train = activations[i]
             acc_train = f_r2score(y_train, activations[-1])
                 
-            input_train = X_test
+            input_train = X_val
             for i in range(N_LAYERS):
                 activations[i], _ = layers[i].forward(input_train)
                 input_train = activations[i]
-            acc_test = f_r2score(y_test, activations[-1])
+            acc_val = f_r2score(y_val, activations[-1])
             
-            if (acc_train + acc_test > b_acc):
+            if (acc_train + acc_val > b_acc):
                 b_epoch = epoch
-                b_acc = acc_train + acc_test
+                b_acc = acc_train + acc_val
 
         train_x, train_y = get_stochastic(X_train, y_train)
         for i in range(N_LAYERS):

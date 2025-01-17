@@ -3,7 +3,8 @@
 def init_st_sig(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD
     from config import EPOCHS_STOCHASTIC_2, LS_SIGMOID_1, N_LAYERS, SEED_ST_SIG
-    from preprocessing import get_train_test_pd
+    from config import Style, RESET_ALL
+    from preprocessing import get_train_val_pd
     from batch import get_stochastic
     from activations import sigmoid, der_sigmoid
     from plot import Plot
@@ -17,9 +18,9 @@ def init_st_sig(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
     COUNT_PLOT = plt_ct
 
     # Normalize the data
-    X_train, y_train, X_test, y_test = get_train_test_pd()
+    X_train, y_train, X_val, y_val = get_train_val_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
-    y_test = y_test.to_numpy().reshape(-1, 1)
+    y_val = y_val.to_numpy().reshape(-1, 1)
 
     with open(SEED_ST_SIG, 'r') as file:
         data = json.load(file)
@@ -35,7 +36,7 @@ def init_st_sig(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
         plt = Plot(COUNT_PLOT)
     plt.set_error_data(X_train, y_train, layers, plt_it)
     plt.set_plot_config("Training", "blue", plt_it, "-", EPOCHS)
-    plt.set_error_data(X_test, y_test, layers, plt_it + 1)
+    plt.set_error_data(X_val, y_val, layers, plt_it + 1)
     plt.set_plot_config("Validation", "orange", plt_it + 1, "--", EPOCHS)
 
     for epoch in range(EPOCHS):
@@ -44,11 +45,12 @@ def init_st_sig(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
             LEARNING_RATE *= DECAY_RATE
 
         plt.set_error_data(X_train, y_train, layers, plt_it)
-        plt.set_error_data(X_test, y_test, layers, plt_it + 1)
-        acc_train, mse_train, _ = plt.get_error_data(plt_it)
+        plt.set_error_data(X_val, y_val, layers, plt_it + 1)
+        acc_train, mse_train, _, ce_train = plt.get_error_data(plt_it)
         
         if (epoch % 100 == 0):
-            print(f"Epoch: {epoch}", "MSE: ", f"{mse_train:.5f}", "R2: ", f"{acc_train:.5f}")
+            print(f"Epoch {epoch}: " + Style.DIM + "MSE", f"[{mse_train:.3f}] "
+                + "R2", f" [{acc_train:.3f}]", "CE", f"[{ce_train:.3f}]" + RESET_ALL)
 
         train_x, train_y = get_stochastic(X_train, y_train)
         for i in range(N_LAYERS):
@@ -64,7 +66,7 @@ def init_st_sig(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
         plt.plot_loss_epochs()
 
     print_preds(layers, X_train, y_train, 1)
-    print_preds(layers, X_test, y_test, 2)
+    print_preds(layers, X_val, y_val, 2)
     
     if (plt_ret):
         return layers, plt

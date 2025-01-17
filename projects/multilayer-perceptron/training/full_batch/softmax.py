@@ -3,8 +3,9 @@
 def init_fb_soft(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
     from config import LEARNING_RATE, STEP_SIZE, DECAY_RATE, CONVERGENCE_THRESHOLD, SEED_FB_SOFT
     from config import EPOCHS_FBATCH_2, LS_SOFTMAX_0, N_LAYERS
+    from config import Style, RESET_ALL
     import numpy as np
-    from preprocessing import get_train_test_pd
+    from preprocessing import get_train_val_pd
     from activations import softmax, der_softmax
     from plot import Plot
     from setup import setup_layers
@@ -17,9 +18,9 @@ def init_fb_soft(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
     COUNT_PLOT = plt_ct
 
     # Normalize the data
-    X_train, y_train, X_test, y_test = get_train_test_pd()
+    X_train, y_train, X_val, y_val = get_train_val_pd()
     y_train = y_train.to_numpy().reshape(-1, 1)
-    y_test = y_test.to_numpy().reshape(-1, 1)
+    y_val = y_val.to_numpy().reshape(-1, 1)
     
     with open(SEED_FB_SOFT, 'r') as file:
         data = json.load(file)
@@ -34,14 +35,14 @@ def init_fb_soft(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
     soft_y_train = np.zeros((y_train.shape[0], 2))
     soft_y_train[np.arange(y_train.shape[0]), y_train.flatten()] = 1
 
-    soft_y_test = np.zeros((y_test.shape[0], 2))
-    soft_y_test[np.arange(y_test.shape[0]), y_test.flatten()] = 1
+    soft_y_val = np.zeros((y_val.shape[0], 2))
+    soft_y_val[np.arange(y_val.shape[0]), y_val.flatten()] = 1
 
     if (plt == None):
         plt = Plot(COUNT_PLOT)
     plt.set_error_data(X_train, soft_y_train, layers, plt_it)
     plt.set_plot_config("Training", "blue", plt_it, "-", EPOCHS)
-    plt.set_error_data(X_test, soft_y_test, layers, plt_it + 1)
+    plt.set_error_data(X_val, soft_y_val, layers, plt_it + 1)
     plt.set_plot_config("Validation", "orange", plt_it + 1, "--", EPOCHS)
 
     for epoch in range(EPOCHS):
@@ -49,11 +50,17 @@ def init_fb_soft(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
             LEARNING_RATE *= DECAY_RATE
 
         plt.set_error_data(X_train, soft_y_train, layers, plt_it)
-        plt.set_error_data(X_test, soft_y_test, layers, plt_it + 1)
-        acc_train, mse_train, _ = plt.get_error_data(plt_it)
+        plt.set_error_data(X_val, soft_y_val, layers, plt_it + 1)
+        acc_train, mse_train, _, ce_train = plt.get_error_data(plt_it)
 
         if (epoch % 100 == 0):
-            print(f"Epoch: {epoch}", "MSE: ", f"{mse_train:.5f}", "R2: ", f"{acc_train:.5f}")
+            print(f"Epoch {epoch}: " + Style.DIM + "MSE", f"[{mse_train:.3f}] "
+                + "R2", f" [{acc_train:.3f}]", "CE", f"[{ce_train:.3f}]" + RESET_ALL)
+
+        early = plt.bool_early_stop(plt_it + 1, epoch)
+        if (early == True):
+            print("Early stopping...")
+            break
 
         # Forward propagation
         train_input = X_train
@@ -76,7 +83,7 @@ def init_fb_soft(plt=None, plt_it=0, plt_ct=2, plt_show=True, plt_ret=False):
         plt.plot_loss_epochs()
 
     print_preds(layers, X_train, soft_y_train, 1)
-    print_preds(layers, X_test, soft_y_test, 2)
+    print_preds(layers, X_val, soft_y_val, 2)
     
     if (plt_ret):
         return layers, plt
