@@ -4,6 +4,9 @@ import pandas as pd
 import config
 from colorama import Fore, Back, Style
 from df_utils import set_thetas_values
+from loss import f_mae, f_mse
+from train import forward, comp_gradients
+from config import LEARNING_RATE, NUM_ITERATIONS, CONVERGENCE_THRESHOLD
 from tqdm import tqdm
 
 RESET_ALL = Fore.RESET + Back.RESET + Style.RESET_ALL
@@ -15,43 +18,16 @@ df = pd.read_csv(config.FT_LINEAR_REGRESSION_CAR_MILEAGE_TRAIN)
 
 # Normalize mileage values (do this once, not inside the gradient calculation)
 mean_mileage = df['km'].mean()
-sigma_mileage = df['km'].std()
-# print("Sigma (Standard deviation of mileage):", sigma_mileage)
+std_mileage = df['km'].std()
 
-df['km'] = (df['km'] - mean_mileage) / sigma_mileage
+mean_price = df['price'].mean()
+std_price = df['price'].std()
 
-NUM_ITERATIONS = 3000  # Number of iterations to repeat
-CONVERGENCE_THRESHOLD = 1e-13  # Threshold for convergence
-LEARNING_RATE = 1e-1
+norm_mileage = (df['km'] - mean_mileage) / std_mileage
+# norm_price = (df['price'] - mean_price) / std_price
 
 THETA0 = 0
 THETA1 = 0
-
-def funct_predict(theta0, theta1, mileage):
-    """ Main function to predict the price of a car """
-    return theta0 + (theta1 * mileage)
-
-def comp_gradients(theta0, theta1, dataframe):
-    """ Compute the gradients of the cost function """
-    m = len(dataframe)
-    sum0 = 0
-    sum1 = 0
-    for i in range(m):
-        sum0 += funct_predict(
-            theta0, theta1, dataframe['km'][i]) - dataframe['price'][i]
-
-        sum1 += (funct_predict(
-            theta0, theta1, dataframe['km'][i]) - dataframe['price'][i]) * dataframe['km'][i]
-    ret_tmp0, ret_tmp1 = sum0 / m, sum1 / m
-    ret_tmp0 = LEARNING_RATE * ret_tmp0
-    ret_tmp1 = LEARNING_RATE * ret_tmp1
-    return ret_tmp0, ret_tmp1
-
-def f_mse(dataframe, theta0, theta1):
-    """ Compute the mean squared error """
-    predictions = [funct_predict(theta0, theta1, x) for x in dataframe['km']]
-    ret_mse = sum((dataframe['price'] - predictions) ** 2) / len(dataframe)
-    return ret_mse
 
 # Gradient descent loop
 # for it in range(NUM_ITERATIONS):
@@ -62,7 +38,7 @@ with tqdm(
     for it in range(NUM_ITERATIONS):
         pbar.update(1)
         # Compute the gradients
-        tmp0, tmp1 = comp_gradients(THETA0, THETA1, df)
+        tmp0, tmp1 = comp_gradients(THETA0, THETA1, norm_mileage, df['price'])
 
         # Update theta values
         THETA0 -= tmp0
@@ -70,17 +46,21 @@ with tqdm(
 
         # Optional: Check for convergence
         if abs(tmp0) < CONVERGENCE_THRESHOLD and abs(tmp1) < CONVERGENCE_THRESHOLD:
-            mse = f_mse(df, THETA0, THETA1)
+            mse = f_mse(norm_mileage, df['price'], THETA0, THETA1)
             print("\tIteration " + Fore.LIGHTWHITE_EX
                 + Style.BRIGHT + f"{it}" + RESET_ALL
-                + ", MSE = " + Style.BRIGHT + f"{mse:3f}" + RESET_ALL)
+                + ": MSE [" + Style.BRIGHT + f"{mse:.3f}]" + RESET_ALL)
             print( Fore.GREEN + Style.BRIGHT
                 + f"\nConverged after {it+1} iterations!" + RESET_ALL + "\n")
             break
 
-        if it % 100 == 0:
-            mse = f_mse(df, THETA0, THETA1)
-            # print(f"\tIteration {it}, MSE = {mse:3f}")
+        if (it % 50 == 0):
+            if (it == 0):
+                print(RESET_ALL)
+            mse = f_mse(norm_mileage, df['price'], THETA0, THETA1)
+            print("\tIteration " + Fore.LIGHTWHITE_EX
+                + Style.BRIGHT + f"{it}" + RESET_ALL
+                + ": MSE [" + Style.BRIGHT + f"{mse:.3f}]" + RESET_ALL)
 
 # Output the final results
 print("🧮 Results:" + RESET_ALL)
