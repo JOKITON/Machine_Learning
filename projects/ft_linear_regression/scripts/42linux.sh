@@ -28,7 +28,7 @@ else
 		pip install -r requirements-nvidia.txt
     elif [ $os_choice -eq 3 ]; then
 		echo "You chose 42 Linux."
-		pip install -r requirements.txt
+		.venv/bin/pip install -r requirements.txt
 	else
 		echo "Invalid choice. Exiting."
 	fi
