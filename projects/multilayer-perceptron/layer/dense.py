@@ -56,6 +56,10 @@ class DenseLayer:
         """
         self.inputs = inputs
         self.output = np.dot(self.inputs, self.weights) + self.biases
+        print("Forward:")
+        print(self.inputs.shape, self.weights.shape, self.biases.shape)
+        print(self.output.shape)
+        print()
 
         self.activations = self.f_actv(self.output)
 
@@ -74,6 +78,11 @@ class DenseLayer:
 
         # Gradients with respect to weights, biases, and inputs
         dweights = np.dot(self.inputs.T, dactivation) / self.activations.shape[0]
+        print("Backward:")
+        print(dactivation.shape, self.inputs.shape)
+        print(dactivation.shape, self.inputs.T.shape)
+        print(dweights.shape)
+        print()
         dbiases = np.sum(dactivation, axis=0, keepdims=True) / self.activations.shape[0]
 
         # Gradient with respect to inputs

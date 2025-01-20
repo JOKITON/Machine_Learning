@@ -46,7 +46,9 @@ def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
         label=f'Prediction Line: $\\theta_0$={theta0:.2f}, $\\theta_1$={theta1:.2f}')
 
     # Force consistent Y-axis limits
-    plt.ylim(min(df_real_price) - 500, max(df_real_price) + 500)
+    ylin_min = min(df_predicted_price) - 500
+    ylin_max = max(df_real_price) + 500
+    plt.ylim(ylin_min, ylin_max)
 
     # Plot settings
     plt.xlabel('Mileage (km)')
