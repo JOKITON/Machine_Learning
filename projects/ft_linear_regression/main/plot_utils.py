@@ -4,11 +4,9 @@ import matplotlib.pyplot as plt
 import config
 import numpy as np
 from df_utils import get_thetas_values
+import numpy as np
 
-TRAINING_MEAN = 101066.25
-TRAINING_STD = 52674.24560550151
-
-def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
+def crt_plot(mileage, prices, predicted_prices, mile_frame, regression_line=None):
     """ Create a plot of actual vs predicted prices and the regression line """
 
     if mile_frame != 'all':
@@ -19,24 +17,25 @@ def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
 
     # Scatter plot of actual and predicted prices
     plt.scatter(
-        df_mileage,
-        df_real_price,
+        mileage,
+        prices,
         color='blue',
         label='Actual Prices (<= ' + mile_frame + ' km)')
     plt.scatter(
-        df_mileage,
-        df_predicted_price,
+        mileage,
+        predicted_prices,
         color='red',
         label='Predicted Prices (<= ' + mile_frame + ' km)')
 
     # Generate a range of mileage values
-    mileage_range = np.linspace(min(df_mileage), max(df_mileage), 1000)
+    mileage_range = np.linspace(22899.0, 240000.0, 1000)
 
-    # Normalize the mileage range for the regression function
-    normalized_mileage = (mileage_range - TRAINING_MEAN) / TRAINING_STD
-
-    # Compute the regression line using normalized mileage
-    regression_line = theta0 + theta1 * normalized_mileage
+    if (regression_line is None):
+        # Normalize the mileage range for the regression function
+        normalized_mileage = (mileage_range - mileage.mean()) / mileage.std()
+        # Compute the regression line using normalized mileage
+        regression_line = theta0 + theta1 * normalized_mileage
+        regression_line = (regression_line * prices.std()) + prices.mean()
 
     # Plot the regression line
     plt.plot(
@@ -46,8 +45,8 @@ def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
         label=f'Prediction Line: $\\theta_0$={theta0:.2f}, $\\theta_1$={theta1:.2f}')
 
     # Force consistent Y-axis limits
-    ylin_min = min(df_predicted_price) - 500
-    ylin_max = max(df_real_price) + 500
+    ylin_min = 2851
+    ylin_max = 8790
     plt.ylim(ylin_min, ylin_max)
 
     # Plot settings
@@ -70,42 +69,35 @@ def crt_plot(df_mileage, df_real_price, df_predicted_price, mile_frame):
     # Clear the current plot to avoid overlapping
     plt.clf()
 
-# Plot actual vs predicted prices
-below_100k_mileage = []
-below_100k_price = []
-below_100k_predicted = []
-
-below_200k_mileage = []
-below_200k_price = []
-below_200k_predicted = []
-
-below_300k_mileage = []
-below_300k_price = []
-below_300k_predicted = []
-
-def crt_diverse_df(df, predicted_prices):
+def crt_diverse_df(mileage, prices, predicted_prices, range):
     """ Create diverse plots based on mileage ranges """
-    for mileage, price, predicted_price in zip(df['km'], df['price'], predicted_prices):
-        if mileage <= 100000:
-            below_100k_mileage.append(mileage)
-            below_100k_price.append(price)
-            below_100k_predicted.append(predicted_price)
-        elif mileage <= 200000:
-            below_200k_mileage.append(mileage)
-            below_200k_price.append(price)
-            below_200k_predicted.append(predicted_price)
-        else:
-            below_300k_mileage.append(mileage)
-            below_300k_price.append(price)
-            below_300k_predicted.append(predicted_price)
+    ret_mileage = np.array([])
+    ret_price = np.array([])
+    ret_predicted = np.array([])
+    for mileage, price, predicted_price in zip(mileage, prices, predicted_prices):
+        if mileage <= range and mileage >= range - 100000:
+            ret_mileage = np.append(ret_mileage, mileage)
+            ret_price = np.append(ret_price, price)
+            ret_predicted = np.append(ret_predicted, predicted_price)
+    return ret_mileage, ret_price, ret_predicted
 
-def crt_diverse_plot():
+def crt_diverse_plot(mileage, prices, predicted):
     """ Create diverse plots on mileage ranges going from 0-100k, 100-200k, 200-300k """
-    crt_plot(
-           below_100k_mileage, below_100k_price, below_100k_predicted, '100k')
 
-    crt_plot(
-        below_200k_mileage, below_200k_price, below_200k_predicted, '200k')
+    theta0, theta1 = get_thetas_values()
+    mileage_range = np.linspace(np.min(mileage), np.max(mileage), 1000)
+    # Normalize the mileage range for the regression function
+    normalized_mileage = (mileage_range - mileage.mean()) / mileage.std()
+    # Compute the regression line using normalized mileage
+    regression_line = theta0 + theta1 * normalized_mileage
+    regression_line = (regression_line * prices.std()) + prices.mean()
 
+    sp_mileage, sp_prices, sp_predicted = crt_diverse_df(mileage, prices, predicted, 100000)
     crt_plot(
-        below_300k_mileage, below_300k_price, below_300k_predicted, '300k')
+           sp_mileage, sp_prices, sp_predicted, '100k', regression_line)
+    sp_mileage, sp_prices, sp_predicted = crt_diverse_df(mileage, prices, predicted, 200000)
+    crt_plot(
+           sp_mileage, sp_prices, sp_predicted, '200k', regression_line)
+    sp_mileage, sp_prices, sp_predicted = crt_diverse_df(mileage, prices, predicted, 300000)
+    crt_plot(
+           sp_mileage, sp_prices, sp_predicted, '300k', regression_line)

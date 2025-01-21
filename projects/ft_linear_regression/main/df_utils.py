@@ -63,10 +63,10 @@ def display_results(df, predicted_prices):
     for mileage, price in zip(df['km'], predicted_prices):
         print(f"Mileage: {mileage} km, Predicted Price: {price:.2f}")
 
-def display_precision(df, predicted_prices):
+def display_precision(prices, predicted_prices):
     """ Display the precision of the linear regression model """
-    mse = mean_squared_error(df['price'], predicted_prices)
-    mae = mean_absolute_error(df['price'], predicted_prices)
-    r2 = r2_score(df['price'], predicted_prices)
+    mse = mean_squared_error(prices, predicted_prices)
+    mae = mean_absolute_error(prices, predicted_prices)
+    r2 = r2_score(prices, predicted_prices)
 
     print(f"📉 MSE: {mse:.2f},\n📈 MAE: {mae:.2f},\n📋 R^2: {r2:.2f}\n")
