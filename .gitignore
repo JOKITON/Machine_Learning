@@ -10,3 +10,8 @@ __pycache__
 
 # Plots
 *.png
+
+# Learning
+filename.npy
+filename.csv
+learning/numpy/data.csv

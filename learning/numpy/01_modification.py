@@ -289,3 +289,80 @@ print("Sum :", f"{np.sum(data)}")
 
 print("Max. (axis=0):", np.max(data, axis=0))
 print("Max. (axis=1):", np.max(data, axis=1))
+
+#* Transposing and reshaping a matrix
+
+data = np.array([[1, 2], [3, 4], [5, 6]])
+
+print("Array before reshaping(3, 2):\n", data)
+print()
+data = data.reshape(2, 3)
+print("Array after reshaping(2, 3):\n", data)
+print()
+data = data.reshape(1, 6)
+print("Array after reshaping(1, 6):\n", data)
+print()
+data = data.reshape(3, 2)
+print("Array after reshaping(3, 2):\n", data)
+print()
+data = data.transpose()
+print("Array after transposing:\n", data)
+print()
+
+#* How to reverse an array
+
+arr = np.array([1, 2, 3, 4, 5, 6, 7, 8])
+
+arr = np.flip(arr)
+print("Flipped array:\n", arr)
+print()
+
+arr_2d = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+
+data = np.flip(arr_2d)
+print("Flipped 2d array:\n", data)
+print()
+
+data = np.flip(arr_2d, axis=0)
+print("Flipped 2d array on axis 0:\n", data)
+print()
+
+data = np.flip(arr_2d, axis=1)
+print("Flipped 2d array on axis 1:\n", data)
+print()
+
+#* Reshaping and flattening multidimensional arrays
+
+x = np.array([[1 , 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+
+print("Flattened array:\n", x.flatten())
+
+a2 = np.ravel(x)
+
+# Changed made to this array will be reflected in the original array
+print("Ravel array:\n", a2)
+
+a2 = a2.reshape(3, 4)
+
+print("Original array:\n", x)
+
+#* Working with mathematical formulas
+
+def mse(true, predictions):
+    n = predictions.shape[1]
+    error = (1/n) * np.sum((true - predictions)**2)
+    return error
+
+print()
+print("Saved array with np.save():\n", a2)
+np.save("filename", a2)
+
+a3 = np.load("filename.npy")
+print()
+print("Loaded array with np.load():\n", a3)
+
+np.savetxt("filename.csv", a2)
+
+a4 = np.loadtxt('filename.csv')
+print()
+print("Loaded array with np.loadtxt():\n", a4)

@@ -24,7 +24,7 @@ print("Row of ones:\n", row_ones)
 print("Column of ones:\n", col_ones)
 
 print()
-print("(matrix * row_ones):")
+print("(matrix + row_ones):")
 print(matrix + row_ones)
 
 print()

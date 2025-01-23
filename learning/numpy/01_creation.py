@@ -120,3 +120,16 @@ _, data = np.unique(a, return_counts=True)
 print()
 print("Unique value counter inside array (a):\n", data)
 print()
+
+a_2d = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [1, 2, 3, 4]])
+unique_values = np.unique(a_2d, axis=0)
+
+print("Unique values inside 2D array (a_2d):\n", unique_values)
+print()
+
+unique_rows, indices, occurrence_count = np.unique(
+     a_2d, axis=0, return_counts=True, return_index=True)
+
+print("Indices:\n", indices)
+print("Occurrence count:\n", occurrence_count)
+print()
