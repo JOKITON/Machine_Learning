@@ -49,6 +49,10 @@ def plot_diagnosis_comp_hist(df, column):
     plt.hist(benign[column], color='green', alpha=0.6, label='Benign', edgecolor='black')
     plt.hist(malignant[column], color='red', alpha=0.6, label='Malignant', edgecolor='black')
 
+    plt.text(0.92, 0.98, f'Malignant\nMean: {malignant[column].mean():.2f}\nStd: {malignant[column].std():.2f}', 
+             fontsize=12, color='red', transform=plt.gca().transAxes, verticalalignment='top', horizontalalignment='center')
+    plt.text(0.92, 0.83,  f'Benign\nMean: {benign[column].mean():.2f}\nStd: {benign[column].std():.2f}', 
+             fontsize=12, color='green', transform=plt.gca().transAxes, verticalalignment='top', horizontalalignment='center')
     # Customize plot
     plt.title(f'Comparison of {column} by Diagnosis', fontsize=16)
     plt.xlabel(column, fontsize=14)
@@ -60,6 +64,9 @@ def plot_diagnosis_comp_hist(df, column):
     
 # Load data once
 df = pd.read_csv('../raw/data.csv')
+
+if (df.isna().sum().sum() / len(df) == 1):
+    print("There are no missing values on the dataset.")
 
 # Plot multiple columns
 columns_to_plot = ['symmetry_mean', 'concave points_worst', 'fractal_dimension_worst', 'symmetry_worst']

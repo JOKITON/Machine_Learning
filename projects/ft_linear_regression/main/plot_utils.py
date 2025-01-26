@@ -35,7 +35,8 @@ def crt_plot(mileage, prices, predicted_prices, mile_frame, regression_line=None
         normalized_mileage = (mileage_range - mileage.mean()) / mileage.std()
         # Compute the regression line using normalized mileage
         regression_line = theta0 + theta1 * normalized_mileage
-        regression_line = (regression_line * prices.std()) + prices.mean()
+        if (regression_line.sum() != 0):
+            regression_line = (regression_line * prices.std()) + prices.mean()
 
     # Plot the regression line
     plt.plot(

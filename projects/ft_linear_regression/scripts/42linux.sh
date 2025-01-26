@@ -9,10 +9,10 @@ else
 	# Set the appropriate environment variables based on the user's choice
 	if [ $os_choice -eq 1 ]; then
 		echo "You chose Mac."
-		python3.9 -m venv .venv
+		python3.12 -m venv .venv
 	elif [ $os_choice -eq 2 ]; then
 		echo "You chose Windows/Linux."
-		python3.9 -m venv .venv
+		python3.12 -m venv .venv
     elif [ $os_choice -eq 3 ]; then
 		echo "You chose 42 Linux."
 		virtualenv -p /sgoinfre/students/jaizpuru/homebrew/bin/python3.9 .venv
@@ -33,17 +33,17 @@ else
 		# Activate the virtual environment
 		source .venv/bin/activate
 		pip install --upgrade pip
-		pip install -r requirements.txt
+		pip install -r requirements_py3.12.txt
 	elif [ $os_choice -eq 2 ]; then
 		echo "You chose Windows/Linux."
 		# Activate the virtual environment
 		source .venv/bin/activate
 		pip install --upgrade pip
-		pip install -r requirements-nvidia.txt
+		pip install -r requirements_py3.12.txt
     elif [ $os_choice -eq 3 ]; then
 		echo "You chose 42 Linux."
 		.venv/bin/pip install --upgrade pip
-		.venv/bin/pip install -r requirements.txt
+		.venv/bin/pip install -r requirements_py3.9.txt
 	else
 		echo "Invalid choice. Exiting."
 	fi
