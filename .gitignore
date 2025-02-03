@@ -15,4 +15,4 @@ __pycache__
 filename.npy
 filename.csv
 learning/numpy/data.csv
-learning/eeg/sample_data
+sample_data

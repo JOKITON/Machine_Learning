@@ -1,4 +1,4 @@
-""" Removes Power Line artifact removal from MEG data """
+""" Analyzes the ocular artifacts in the EEG data """
 
 import numpy as np
 from pathlib import Path
