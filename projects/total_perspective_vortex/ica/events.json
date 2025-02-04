@@ -1,0 +1,8 @@
+{
+    "Baseline (Rest)": 1,
+    "Task cue (Start of a motor imagery trial)": 2,
+    "Left fist movement": 3,
+    "Right fist movement": 4,
+    "Both fists movement": 5,
+    "Both feet movement": 32
+}

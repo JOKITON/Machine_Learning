@@ -9,6 +9,7 @@ class EEGData:
         """Initialize EEGData object with file paths and optional filter settings."""
         self.eeg_path = eeg_path
         self.noise_path = noise_path
+
         self.l_freq = l_freq
         self.h_freq = h_freq
         self.load_data()
@@ -19,11 +20,28 @@ class EEGData:
         # Cut down duration to 60s
         # self.raw_eeg.crop(tmax=60.0).pick(picks=["mag", "eeg", "stim", "eog"])
 
+        # Extract events directly from the EEG raw data
+        self.events = mne.find_events(self.raw_eeg, stim_channel="STI 014", verbose=True)
+
         self.raw_noise = mne.io.read_raw_fif(self.noise_path, preload=True, verbose=False)
     
-    def get_data(self):
+    def load_event_dict(self, event_json):
+        """Saves event dictionary from JSON."""
+
+        # Convert keys from string to int (JSON stores keys as strings)
+        self.event_dict = {str(k): v for k, v in event_json.items()}
+    
+    def get_raw_data(self):
         """Returns EEG and noise data."""
-        return self.raw_eeg, self.raw_noise
+        return self.raw_eeg
+
+    def get_raw_noise(self):
+        """Returns noise data."""
+        return self.raw_noise
+
+    def get_events(self):
+        """Returns events data."""
+        return self.events, self.event_dict
 
     def filter_data(self, tmax=None):
         """Applies bandpass filter to EEG and noise data. Can also crop data."""
@@ -32,36 +50,41 @@ class EEGData:
             self.raw_eeg.crop(tmax=tmax)
             self.raw_noise.crop(tmax=tmax)
         self.raw_eeg_filtered = self.raw_eeg.copy().filter(l_freq=self.l_freq, h_freq=self.h_freq, fir_design="firwin")
-        self.raw_noise_filtered = self.raw_noise.copy().filter(l_freq=self.l_freq, h_freq=self.h_freq, fir_design="firwin")
+        self.raw_noise_filtered = self.raw_noise.copy().filter(l_freq=self.l_freq, h_freq=self.h_freq, fir_design="firwin", verbose=False)
 
-    def compute_ica(self):
+    def compute_ica(self, plot_comp=False, plot_arts=False):
+        if not hasattr(self, "raw_eeg_filtered"):
+            raise ValueError("Filtered data not found. Call `filter_data()` before running ICA.")
         ica = ICA(n_components=20, random_state=97, max_iter=800)
         ica.fit(self.raw_eeg_filtered)  # Fit ICA on raw EEG data
         
-        # Plot ICA components
-        ica.plot_components()
+        if plot_comp is True:
+            # Plot ICA components
+            ica.plot_components()
 
         # Detect ECG artifacts
         ecg_inds, ecg_scores = ica.find_bads_ecg(inst=self.raw_eeg_filtered, method='correlation')
-        print("\nPlotting scores of ECG components...")
-        ica.plot_scores(ecg_scores)
-
         # Detect EOG artifacts
         eog_inds, eog_scores = ica.find_bads_eog(inst=self.raw_eeg_filtered, ch_name='EOG 061')
-        print("\nPlotting scores of EOG components...")
-        ica.plot_scores(eog_scores)
 
-        # Flatten lists in case they are nested
-        ecg_inds = [comp for sublist in ecg_inds for comp in sublist] if ecg_inds and isinstance(ecg_inds[0], list) else ecg_inds
-        eog_inds = [comp for sublist in eog_inds for comp in sublist] if eog_inds and isinstance(eog_inds[0], list) else eog_inds
+        if plot_arts is True:
+            
+            ica.plot_scores(eog_scores)
+            print("\nPlotting scores of EOG components...")
+            ica.plot_scores(ecg_scores)
+            print("\nPlotting scores of ECG components...")
 
-        # Visualize the identified components
-        if ecg_inds:
-            ica.plot_sources(self.raw_eeg_filtered, picks=ecg_inds)
-        if eog_inds:
-            ica.plot_sources(self.raw_eeg_filtered, picks=eog_inds)
+            # Visualize the identified components
+            if ecg_inds:
+                # Flatten lists in case they are nested
+                ecg_inds = [comp for sublist in ecg_inds for comp in sublist] if ecg_inds and isinstance(ecg_inds[0], list) else ecg_inds
+                ica.plot_sources(self.raw_eeg_filtered, picks=ecg_inds)
+            if eog_inds:
+                ica.plot_sources(self.raw_eeg_filtered, picks=eog_inds)
+                eog_inds = [comp for sublist in eog_inds for comp in sublist] if eog_inds and isinstance(eog_inds[0], list) else eog_inds
 
         plt.show()
+
         # Exclude the identified components
         ica.exclude = ecg_inds + eog_inds
         print(f"Excluding ICA components: {ica.exclude}")
