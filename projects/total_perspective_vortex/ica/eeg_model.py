@@ -3,6 +3,8 @@ import mne
 import matplotlib.pyplot as plt
 from pathlib import Path
 from mne.preprocessing import ICA, corrmap, create_ecg_epochs, create_eog_epochs
+from mne.viz import plot_topomap
+from mne.evoked import plot_evoked_joint
 
 class EEGData:
     def __init__(self, eeg_path, noise_path, l_freq=None, h_freq=None):
@@ -29,7 +31,7 @@ class EEGData:
         """Saves event dictionary from JSON."""
 
         # Convert keys from string to int (JSON stores keys as strings)
-        self.event_dict = {str(k): v for k, v in event_json.items()}
+        self.event_dict = event_json
     
     def get_raw_data(self):
         """Returns EEG and noise data."""
@@ -43,16 +45,16 @@ class EEGData:
         """Returns events data."""
         return self.events, self.event_dict
 
-    def filter_data(self, tmax=None):
+    def filter_data(self, tmax=None, verbose=False):
         """Applies bandpass filter to EEG and noise data. Can also crop data."""
         if tmax:
             print(f"Cropping data to {tmax:.2f} seconds.")
             self.raw_eeg.crop(tmax=tmax)
             self.raw_noise.crop(tmax=tmax)
-        self.raw_eeg_filtered = self.raw_eeg.copy().filter(l_freq=self.l_freq, h_freq=self.h_freq, fir_design="firwin")
-        self.raw_noise_filtered = self.raw_noise.copy().filter(l_freq=self.l_freq, h_freq=self.h_freq, fir_design="firwin", verbose=False)
+        self.raw_eeg_filtered = self.raw_eeg.copy().filter(l_freq=self.l_freq, h_freq=self.h_freq, fir_design="firwin", verbose=verbose)
+        self.raw_noise_filtered = self.raw_noise.copy().filter(l_freq=self.l_freq, h_freq=self.h_freq, fir_design="firwin", verbose=verbose)
 
-    def compute_ica(self, plot_comp=False, plot_arts=False):
+    def compute_ica(self, plot_comp=False, plot_arts=False, verbose=False):
         if not hasattr(self, "raw_eeg_filtered"):
             raise ValueError("Filtered data not found. Call `filter_data()` before running ICA.")
         ica = ICA(n_components=20, random_state=97, max_iter=800)
@@ -63,9 +65,9 @@ class EEGData:
             ica.plot_components()
 
         # Detect ECG artifacts
-        ecg_inds, ecg_scores = ica.find_bads_ecg(inst=self.raw_eeg_filtered, method='correlation')
+        ecg_inds, ecg_scores = ica.find_bads_ecg(inst=self.raw_eeg_filtered, method='correlation', verbose=verbose)
         # Detect EOG artifacts
-        eog_inds, eog_scores = ica.find_bads_eog(inst=self.raw_eeg_filtered, ch_name='EOG 061')
+        eog_inds, eog_scores = ica.find_bads_eog(inst=self.raw_eeg_filtered, ch_name='EOG 061', verbose=verbose)
 
         if plot_arts is True:
             
@@ -91,7 +93,7 @@ class EEGData:
 
         # Apply ICA only if there are components to exclude
         if ica.exclude:
-            self.raw_clean = ica.apply(self.raw_eeg_filtered.copy())  # Apply ICA on a copy
+            self.raw_clean = ica.apply(self.raw_eeg_filtered.copy(), verbose=verbose)  # Apply ICA on a copy
         else:
             print("No components to exclude, skipping ICA application.")
             self.raw_clean = self.raw_eeg_filtered.copy()
@@ -131,4 +133,36 @@ class EEGData:
     def plot_clean_eeg(self, title="Cleaned EEG Data"):
         """Plots cleaned EEG data."""
         self.raw_clean.plot(title=title)
+        plt.show()
+
+    def plot_markers(self, evoked_str1, evoked_str2, verbose=False):
+        event_keys = []
+        for key, value in self.event_dict.items():
+            if key == evoked_str1 or key == evoked_str2:
+                event_keys.append(value - 1)  # Append only event name
+
+        # Pick only EEG channels
+        eeg_channels = mne.pick_types(self.raw_clean.info, eeg=True)
+
+        epochs = mne.Epochs(
+            self.raw_clean, self.events, event_id=event_keys,  # Now using correct event IDs
+            tmin=-0.2, tmax=0.5, baseline=(None, 0), preload=True,
+            verbose=verbose, picks=eeg_channels
+        )
+
+        print(type(epochs))
+        evoked_epochs_one = epochs[event_keys[0]].average()
+        evoked_epochs_two = epochs[event_keys[1]].average()
+
+        # Create a single figure with multiple subplots
+        fig, axes = plt.subplots(1, 1, figsize=(10, 8))
+        fig = mne.viz.plot_compare_evokeds(
+            [evoked_epochs_one, evoked_epochs_two],
+            title="EEG",
+            axes=axes,
+            show=False,
+            legend='upper right'
+        )
+        axes.legend([evoked_str1, evoked_str2])
+
         plt.show()

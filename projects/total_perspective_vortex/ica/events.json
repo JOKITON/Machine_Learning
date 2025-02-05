@@ -1,8 +1,9 @@
 {
-    "Baseline (Rest)": 1,
-    "Task cue (Start of a motor imagery trial)": 2,
-    "Left fist movement": 3,
-    "Right fist movement": 4,
-    "Both fists movement": 5,
-    "Both feet movement": 32
+    "Baseline (eyes open)": 1,
+    "Baseline (eyes closed)": 2,
+    "Task 1 (open and close left or right fist)": 3,
+    "Task 2 (imagine opening and closing left or right fist)": 4,
+    "Task 3 (open and close both fists or both feet)": 5,
+    "Task 4 (imagine opening and closing both fists or both feet)": 6,
+    "Task 4": 14
 }
