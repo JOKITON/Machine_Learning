@@ -63,11 +63,10 @@ class EEGData:
 		"""Loads EEG data from files."""
 		is_raw_local = self.config['is_raw_local'].lower() == 'true'
 		is_raw_filt_local = self.config['is_raw_filt_local'].lower() == 'true'
-		is_ica_local = self.config['is_ica_local'].lower() == 'true'
-		is_raw_norm_local = self.config['is_norm_local'].lower() == 'true'
-		is_csp_local = self.config['is_csp_local'].lower() == 'true'
 		is_event_local = self.config['is_event_local'].lower() == 'true'
 		fast_start = self.config['fast_start'].lower() == 'true'
+		""" is_ica_local = self.config['is_ica_local'].lower() == 'true'
+		is_raw_norm_local = self.config['is_norm_local'].lower() == 'true' """
 
 		if is_raw_local is False: # In case data is not stored locally
 			data1, _ = fetch_data(self.subject, self.config["run_exec_h"],
@@ -102,21 +101,6 @@ class EEGData:
 			print(self.raw_filt_h, self.raw_filt_hf)
 
 			self.IS_FILTERED = True
-
-		if is_ica_local == True:
-			self.clean_raw_h, self.clean_raw_hf = read_data(
-				type="filtered", config=self.config, base_path=folder, verbose=verbose)
-			print(self.clean_raw_h, self.clean_raw_hf)
-
-			self.IS_ICA = True
-
-		if is_raw_norm_local == True and fast_start is False: # In case normalized data is stored locally
-
-			self.norm_raw_h, self.norm_raw_hf = read_data(
-				type="norm", config=self.config, base_path=folder, verbose=verbose)
-			print(self.norm_raw_h, self.norm_raw_hf)
-
-			self.IS_NORMALIZED = True
 
 	def get_raw(self):
 		"""Returns EEG and noise data."""
@@ -187,7 +171,7 @@ class EEGData:
 		else:
 			raise ValueError("Data has not been proccessed correctly. Check the type and the data.")
 
-	def decomp_ica(self, plt_show=False, n_components=None, verbose=False):
+	""" def decomp_ica(self, plt_show=False, n_components=None, verbose=False):
 		if self.IS_FILTERED is False:
 			raise ValueError("Data has not been filtered. Call `filter_data()` before applying ICA.")
 		if self.IS_ICA is True:
@@ -207,7 +191,24 @@ class EEGData:
 		self.clean_raw_h = self.ica_h.apply(self.raw_filt_h.copy())
 		self.clean_raw_hf =self.ica_hf.apply(self.raw_filt_hf.copy())
 
-		self.IS_ICA = True
+		self.IS_ICA = True """
+  
+	def decomp_ica(self, data, plt_show=False, n_components=None, verbose=False):
+		if self.IS_FILTERED is False:
+			raise ValueError("Data has not been filtered. Call `filter_data()` before applying ICA.")
+		if self.IS_ICA is True:
+			raise ValueError("Data has already been processed with ICA...")
+
+		# Create and fit ICA for the first dataset
+		self.ica = mne.preprocessing.ICA(n_components=n_components, random_state=42, method='fastica')
+		self.ica.fit(data)
+
+		self.ica = remove_eog(self.ica, data, plt=plt_show, title="EOG artifacts in individual Hands", verbose=False)
+
+		data_ica = self.ica.apply(data.copy())
+
+		return data_ica
+
 
 	def crt_epochs(self, data, events, event_dict, group_type, verbose=False):
 		""" Cretates epochs to later apply CSP, ICA and feed the ML algorimth selected. """
@@ -244,32 +245,31 @@ class EEGData:
 
 		return features, labels
 
-	def two_step_csp(self, data, events, event_dict1, event_dict2, freq_bands, verbose=False):
+	def two_step_csp(self, epochs1, epochs2, freq_bands, verbose=False):
 		""" Performs a two-step binary classification using CSP """
 		from csp import truncate_csp
 
 		# **Step 1: Extract features for the first class**
-		features_csp1, labels_csp1 = self.simple_csp(data, events, event_dict1, freq_bands, verbose=verbose)
+		features_csp1, _ = self.simple_csp(epochs1, freq_bands, verbose=verbose)
 
 		# **Step 2: Extract features for the second class**
-		features_csp2, labels_csp2 = self.simple_csp(data, events, event_dict2, freq_bands, verbose=verbose)
+		features_csp2, labels = self.simple_csp(epochs2, freq_bands, verbose=verbose)
 
 		features_csp1, features_csp2, min_samples = truncate_csp(features_csp1, features_csp2)
-		epochs = mne.Epochs(data, events, event_dict2, tmin=self.csp_config["tmin"], tmax=self.csp_config["tmax"], baseline=None, verbose=verbose)
 
 		# **Final Step: Stack CSP1 and CSP2 features together**
 		all_features = np.hstack([features_csp1, features_csp2])
-		labels = epochs.events[:min_samples, -1]
 
 		return all_features, labels
 
-	def class_csp(self, data, events, groupeve_dict, freq_bands, ev_dict, verbose=False):
+	def count_events(self, events, groupeve_dict, ev_dict):
 		""" Extract discriminative features for binary classification tasks """
 
 		# Filter event_dict to only keep specified event indices
-		event_dict1 = {key: value for key, value in groupeve_dict.items() if value in ev_dict[0]}
+		event_dict = {key: value for key, value in groupeve_dict.items() if value in ev_dict[0]}
+
 		#* Count the number of events of each type
-		for val, ev_name in zip(event_dict1.values(), event_dict1.items()):
+		for val, ev_name in zip(event_dict.values(), event_dict.items()):
 			event_count = 0
 			for event in events:	
 				if event[2] == val:
@@ -278,15 +278,6 @@ class EEGData:
 			print(f"Number of events of type {ev_name}: {event_count}")
 		print()
 
-		if len(ev_dict) == 2: # In case of two-step binary classification
-			event_dict2 = {key: value for key, value in groupeve_dict.items() if value in ev_dict[1]}
-			all_features, labels = self.two_step_csp(data, events, event_dict1, event_dict2, freq_bands, verbose=verbose)
-		elif (len(ev_dict) == 1):
-			all_features, labels = self.simple_csp(data, events, event_dict1, freq_bands, verbose=verbose)
-		else:
-			raise ValueError("Invalid combination specified. Choose from 'two_step'.")
-
-		return all_features, labels
 
 	""" def normalize_data(self, data, verbose=False):
 		if self.IS_NORMALIZED:
