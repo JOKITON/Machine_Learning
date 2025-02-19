@@ -5,11 +5,10 @@ from pathlib import Path
 import mne
 from mne.preprocessing import ICA
 import matplotlib.pyplot as plt
-import os
 
 # Get the sample data, if there isn't any, it fetches automatically
-pwd = os.getcwd()
-sample_data_folder = Path(pwd + "/sample_data")
+script_path = Path(__file__).resolve().parent
+sample_data_folder = (script_path / "../sample_data").resolve()
 
 sample_data_raw_file = (
     sample_data_folder / "MEG" / "sample" / "sample_audvis_raw.fif"
