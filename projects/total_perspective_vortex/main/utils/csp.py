@@ -27,17 +27,17 @@ def compute_csp(epochs_data, labels, freq_bands, n_components, fs, verbose=False
 		])
 
 		# Aplicar CSP en la banda filtrada
-		csp = CSP(n_components=n_components, log=True, norm_trace=False)
+		csp = CSP(n_components=n_components, reg='ledoit_wolf', log=True, norm_trace=False)
 		print(filtered_data.shape)
 		print(labels.shape)
-		features = csp.fit_transform(epochs_data, labels)
+		features = csp.fit_transform(filtered_data, labels)
 
 		all_features.append(features)
 
 	# Concatenar características de todas las bandas
 	all_features = np.concatenate(all_features, axis=1)
 
-	return all_features
+	return all_features, csp
 
 def truncate_csp(csp_one, csp_two):
 	min_samples = min(csp_one.shape[0], csp_two.shape[0])

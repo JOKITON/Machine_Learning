@@ -17,6 +17,16 @@ def get_path(base_path, config, type, subtype):
 			path = base_path / config["path_filt_h"]
 		else:
 			path = base_path / config["path_filt_hf"]
+	elif type == "ica":
+		if subtype == 1:
+			path = base_path / config["path_ica_h"]
+		else:
+			path = base_path / config["path_ica_hf"]
+	elif type == "clean":
+		if subtype == 1:
+			path = base_path / config["path_clean_h"]
+		else:
+			path = base_path / config["path_clean_hf"]
 	elif type == "epochs":
 		path = base_path / config["path_epochs"]
 	elif type == "events":

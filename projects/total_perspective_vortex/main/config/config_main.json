@@ -4,6 +4,12 @@
     
     "path_filt_h": "data/filtered/sample_mmi_h_filt_raw.fif",
     "path_filt_hf": "data/filtered/sample_mmi_hf_filt_raw.fif",
+
+    "path_clean_h": "data/ica/sample_mmi_h_clean_raw.fif",
+    "path_clean_hf": "data/ica/sample_mmi_hf_clean_raw.fif",
+
+    "path_ica_h": "data/ica/sample_mmi_h_ica.fif",
+    "path_ica_hf": "data/ica/sample_mmi_hf_ica.fif",
     
     "path_epochs": "data/epochs/sample_mmi_h_epo.fif",
     
@@ -21,6 +27,7 @@
     "is_event_local" : "True",
     "is_raw_local" : "True",
     "is_raw_filt_local" : "True",
+    "is_ica_local" : "True",
     "is_epoch_local" : "False",
 
     "n_subjects" : 10,
@@ -38,5 +45,5 @@
     "l_freq": 8,
     "h_freq": 30.0,
 
-    "n_components" : 32
+    "n_components" : 64
 }

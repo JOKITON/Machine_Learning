@@ -11,17 +11,23 @@ from mne.decoding import UnsupervisedSpatialFilter
 from mne.preprocessing import ICA, corrmap, create_ecg_epochs, create_eog_epochs
 from mne.decoding import CSP
 
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.model_selection import cross_val_score, ShuffleSplit
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import VotingClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.svm import SVC
-from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier
 
 from scipy.signal import butter, filtfilt
 
-from csp import butter_bandpass, apply_bandpass_filter, compute_csp
-from data import read_data, save_data, fetch_data
-from ica import remove_eog
+from utils.csp import butter_bandpass, apply_bandpass_filter, compute_csp
+from utils.data import read_data, save_data, fetch_data
+from utils.ica import remove_eog
 
 class EEGData:
 
@@ -34,6 +40,7 @@ class EEGData:
 		self.raw_h, self.raw_hf = None, None
 		self.raw_filt_h, self.raw_filt_hf = None, None
 		self.norm_raw_h, self.norm_raw_hf = None, None
+		self.clean_raw_h, self.clean_raw_hf = None, None
 		self.ica_h = None
 		self.ica_hf = None
 
@@ -65,8 +72,7 @@ class EEGData:
 		is_raw_filt_local = self.config['is_raw_filt_local'].lower() == 'true'
 		is_event_local = self.config['is_event_local'].lower() == 'true'
 		fast_start = self.config['fast_start'].lower() == 'true'
-		""" is_ica_local = self.config['is_ica_local'].lower() == 'true'
-		is_raw_norm_local = self.config['is_norm_local'].lower() == 'true' """
+		is_ica_local = self.config['is_ica_local'].lower() == 'true'
 
 		if is_raw_local is False: # In case data is not stored locally
 			data1, _ = fetch_data(self.subject, self.config["run_exec_h"],
@@ -102,6 +108,17 @@ class EEGData:
 
 			self.IS_FILTERED = True
 
+		if is_ica_local == True and fast_start is False: # In case filtered data is stored locally
+			self.ica_h, self.ica_hf = read_data(
+				type="ica", config=self.config, base_path=folder, verbose=verbose)
+			print(self.ica_h, self.ica_hf)
+
+			self.clean_raw_h, self.clean_raw_hf = read_data(
+				type="clean", config=self.config, base_path=folder, verbose=verbose)
+			print(self.ica_h, self.ica_hf)
+
+			self.IS_ICA = True
+
 	def get_raw(self):
 		"""Returns EEG and noise data."""
 		return self.raw_h, self.raw_hf
@@ -109,6 +126,14 @@ class EEGData:
 	def get_filt(self):
 		"""Returns noise data."""
 		return self.raw_filt_h, self.raw_filt_hf
+
+	def get_ica(self):
+		"""Returns noise data."""
+		return self.ica_h, self.ica_hf
+
+	def get_clean(self):
+		"""Returns noise data."""
+		return self.clean_raw_h, self.clean_raw_hf
 
 	def get_events(self):
 		"""Returns events data."""
@@ -166,12 +191,18 @@ class EEGData:
 		elif type == "filtered" and self.IS_FILTERED:
 			save_data(self.raw_filt_h, type, 1, self.config, folder_path, verbose=verbose)
 			save_data(self.raw_filt_hf, type, 2, self.config, folder_path, verbose=verbose)
-		elif type == "epochs" and self.IS_FILTERED:
+		elif type == "ica" and self.IS_ICA:
+			save_data(self.ica_h, type, 1, self.config, folder_path, verbose=verbose)
+			save_data(self.ica_hf, type, 2, self.config, folder_path, verbose=verbose)
+		elif type == "clean" and self.IS_ICA:
+			save_data(self.clean_raw_h, type, 1, self.config, folder_path, verbose=verbose)
+			save_data(self.clean_raw_hf, type, 2, self.config, folder_path, verbose=verbose)
+		elif type == "epochs" and self.IS_ICA:
 			save_data(self.epochs, type, 1, self.config, folder_path, verbose=verbose)
 		else:
 			raise ValueError("Data has not been proccessed correctly. Check the type and the data.")
 
-	""" def decomp_ica(self, plt_show=False, n_components=None, verbose=False):
+	def decomp_ica(self, plt_show=False, n_components=None, verbose=False):
 		if self.IS_FILTERED is False:
 			raise ValueError("Data has not been filtered. Call `filter_data()` before applying ICA.")
 		if self.IS_ICA is True:
@@ -191,24 +222,7 @@ class EEGData:
 		self.clean_raw_h = self.ica_h.apply(self.raw_filt_h.copy())
 		self.clean_raw_hf =self.ica_hf.apply(self.raw_filt_hf.copy())
 
-		self.IS_ICA = True """
-  
-	def decomp_ica(self, data, plt_show=False, n_components=None, verbose=False):
-		if self.IS_FILTERED is False:
-			raise ValueError("Data has not been filtered. Call `filter_data()` before applying ICA.")
-		if self.IS_ICA is True:
-			raise ValueError("Data has already been processed with ICA...")
-
-		# Create and fit ICA for the first dataset
-		self.ica = mne.preprocessing.ICA(n_components=n_components, random_state=42, method='fastica')
-		self.ica.fit(data)
-
-		self.ica = remove_eog(self.ica, data, plt=plt_show, title="EOG artifacts in individual Hands", verbose=False)
-
-		data_ica = self.ica.apply(data.copy())
-
-		return data_ica
-
+		self.IS_ICA = True
 
 	def crt_epochs(self, data, events, event_dict, group_type, verbose=False):
 		""" Cretates epochs to later apply CSP, ICA and feed the ML algorimth selected. """
@@ -222,45 +236,99 @@ class EEGData:
 			groupeve_dict = self.csp_config["event_dict_hf"]
 			freq_bands = self.csp_config["freq_exec_hf"]
 
-		print("Before : ", event_dict)
 		event_dict = {key: value for key, value in groupeve_dict.items() if value in event_dict[0]}
-		print("After : ", event_dict)
+		print("Event dict. : ", event_dict)
 
 		self.epochs = mne.Epochs(data, events, event_dict, tmin=tmin, tmax=tmax, baseline=None, verbose=verbose)
-		# data = self.epochs.get_data()
 
 		return self.epochs, freq_bands
 
-	def simple_csp(self, epochs, freq_bands, verbose=False):
+	def csp(self, data, labels, freq_bands, verbose=False):
 		tmin = self.csp_config["tmin"]
 		tmax = self.csp_config["tmax"]
 
 		n_components = self.csp_config["n_components"]
 		fs = self.csp_config["frequency_sample"]
 
-		epochs_data = epochs.get_data()
-		labels = epochs.events[:, -1]
+		features, csp = compute_csp(data, labels, freq_bands, n_components, fs, verbose=verbose)
 
-		features = compute_csp(epochs_data, labels, freq_bands, n_components, fs, verbose=verbose)
-
-		return features, labels
+		return features, csp
 
 	def two_step_csp(self, epochs1, epochs2, freq_bands, verbose=False):
 		""" Performs a two-step binary classification using CSP """
-		from csp import truncate_csp
+		from utils.csp import truncate_csp
+		labels1 = epochs1.events[:, -1]
+		labels2 = epochs2.events[:, -1]
 
 		# **Step 1: Extract features for the first class**
-		features_csp1, _ = self.simple_csp(epochs1, freq_bands, verbose=verbose)
+		features_csp1, _ = self.csp(epochs1.get_data(), labels1, freq_bands, verbose=verbose)
 
 		# **Step 2: Extract features for the second class**
-		features_csp2, labels = self.simple_csp(epochs2, freq_bands, verbose=verbose)
+		features_csp2 = self.csp(epochs2.get_data(), labels2, freq_bands, verbose=verbose)
 
 		features_csp1, features_csp2, min_samples = truncate_csp(features_csp1, features_csp2)
 
 		# **Final Step: Stack CSP1 and CSP2 features together**
 		all_features = np.hstack([features_csp1, features_csp2])
 
-		return all_features, labels
+		return all_features, labels2
+
+	def csp_performance(self, epochs, labels, clf_type='lda', verbose=False):
+		sfreq = self.csp_config["frequency_sample"]
+		w_length = int(sfreq * 0.5)  # Running classifier: window length
+		w_step = int(sfreq * 0.1)    # Running classifier: window step size
+		w_start = np.arange(0, epochs.get_data().shape[2] - w_length, w_step)
+
+		data = epochs.get_data()
+		cv = ShuffleSplit(10, test_size=0.2, random_state=42)
+
+		if clf_type == 'lda':
+			clf = LDA()
+		elif clf_type == 'svm':
+			clf = SVC(kernel='rbf', C=100, gamma=2, probability=False)
+		elif clf_type == 'rf':
+			clf = RandomForestClassifier(n_estimators=200, random_state=42)
+		else:
+			raise(ValueError("Classifier type not recognized. Please use 'lda', 'svm' or 'rf'."))
+
+		csp = CSP(n_components=self.csp_config["n_components"], reg='ledoit_wolf', log=True, norm_trace=False)
+
+		scores_windows = []
+
+		for train_idx, test_idx in cv.split(data):
+			X_train, X_test = data[train_idx], data[test_idx]
+			y_train, y_test = labels[train_idx], labels[test_idx]
+
+			score_this_window = []
+
+			for n in w_start:
+				# Extract sliding window segment
+				X_train_win = X_train[:, :, n : n + w_length]
+				X_test_win = X_test[:, :, n : n + w_length]
+
+				# Apply CSP and reshape features
+				csp.fit(X_train_win, y_train)
+				X_train_csp = csp.transform(X_train_win)
+				X_test_csp = csp.transform(X_test_win)
+
+				# Fit LDA and compute score
+				clf.fit(X_train_csp, y_train)
+				score_this_window.append(clf.score(X_test_csp, y_test))
+
+			scores_windows.append(score_this_window)
+
+		# Plot scores over time
+		w_times = (w_start + w_length / 2.0) / sfreq + 0.3  # Adjusted time axis
+
+		plt.figure()
+		plt.plot(w_times, np.mean(scores_windows, axis=0), label="Score")
+		plt.axvline(0, linestyle="--", color="k", label="Onset")
+		plt.axhline(0.5, linestyle="-", color="k", label="Chance Level")
+		plt.xlabel("Time (s)")
+		plt.ylabel("Classification Accuracy")
+		plt.title("Classification Score Over Time")
+		plt.legend(loc="lower right")
+		plt.show()
 
 	def count_events(self, events, groupeve_dict, ev_dict):
 		""" Extract discriminative features for binary classification tasks """
@@ -278,50 +346,63 @@ class EEGData:
 			print(f"Number of events of type {ev_name}: {event_count}")
 		print()
 
+	def normalize(self, epochs, verbose=False):
+		# Initialize StandardScaler and PCA
+		scaler = StandardScaler()
 
-	""" def normalize_data(self, data, verbose=False):
-		if self.IS_NORMALIZED:
-			raise(ValueError("Data has already been normalized..."))
-		if self.IS_FILTERED is False:
-			raise ValueError("Data has not been filtered. Call `filter_data()` before normalizing.")
-		if self.IS_ICA is False:
-			raise ValueError("Data hasn't been processed with ICA... Call `compute_ica()` before applying CSP.")
-	
-		normalized_h = StandardScaler().fit_transform(data1)
-		normalized_hf = StandardScaler().fit_transform(data2)
+		# Standardize and apply PCA to each epoch individually
+		std_epochs = np.empty((epochs.shape[0], epochs.shape[1], epochs.shape[2]))
 
-		self.IS_NORMALIZED = True """
+		for i in range(epochs.shape[0]):
+			epoch = epochs[i, :, :]  # Shape: (n_channels, n_times)
+			epoch_std = scaler.fit_transform(epoch)  # Standardize
+			std_epochs[i, :, :] = epoch_std
 
-	def normalize_data(self, data, verbose=False):
-		"""Normalizes the data."""
-	
-		normalized = StandardScaler().fit_transform(data)
+		# Verify the shape
+		print("Shape after standardization:", std_epochs.shape)
 
-		return normalized
+		return std_epochs
 
-	def train_model(self, features, labels):
-		from sklearn.model_selection import train_test_split
-		from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-		from sklearn.svm import SVC
-		from sklearn.ensemble import RandomForestClassifier
-		from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+	def pca(self, epochs, verbose=False):
+		# Initialize StandardScaler and PCA
+		pca = PCA(n_components=32)
 
-		# Dividir datos en train y test
-		X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
+		# Standardize and apply PCA to each epoch individually
+		pca_epochs = np.empty((epochs.shape[0], 32, epochs.shape[2]))
 
-		# Probar LDA
-		lda = LinearDiscriminantAnalysis()
+		for i in range(epochs.shape[0]):
+			epoch = epochs[i, :, :]  # Shape: (n_channels, n_times)
+			epoch_pca = pca.fit_transform(epoch.T).T  # Apply PCA
+			pca_epochs[i, :, :] = epoch_pca
+
+		# Verify the shape
+		print("Shape after PCA:", pca_epochs.shape)
+
+		return pca_epochs
+
+	def cross_val(self, X, y, pipeline, n_splits=5):
+		# Evaluate the pipeline using cross-validation
+		cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+		scores = cross_val_score(pipeline, X, y, cv=cv)
+
+		print(scores)
+
+		return scores
+
+	def train_model(self, X, y, pipeline=None):
+
+		# Divide the data into training and testing sets
+		X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+		lda = LDA(solver="eigen")
 		lda.fit(X_train, y_train)
 		y_pred_lda = lda.predict(X_test)
 
-		# Probar SVM
-		svm = SVC(kernel='rbf', C=100, gamma=2, probability=True)
+		svm = SVC(kernel='rbf', C=100, gamma=2, probability=False)
 		svm.fit(X_train, y_train)
 		y_pred_svm = svm.predict(X_test)
 
-		# Probar Random Forest
-
-		rf = RandomForestClassifier(n_estimators=100, random_state=42)
+		rf = RandomForestClassifier(n_estimators=200, random_state=42)
 		rf.fit(X_train, y_train)
 		y_pred_rf = rf.predict(X_test)
 
@@ -332,12 +413,16 @@ class EEGData:
 		""" for pred, real in zip(y_pred_lda, y_test):
 			print(f"Predicted: {pred} - Real: {real}") """
 
-		# Evaluar rendimiento
 		print("LDA Accuracy:", accuracy_score(y_test, y_pred_lda))
 		print("SVM Accuracy:", accuracy_score(y_test, y_pred_svm))
 		print("Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
 
-		# Matriz de confusión
 		print("Confusion Matrix LDA:\n", confusion_matrix(y_test, y_pred_lda))
 		print("Confusion Matrix SVM:\n", confusion_matrix(y_test, y_pred_svm))
 		print("Confusion Matrix RF:\n", confusion_matrix(y_test, y_pred_rf))
+  
+	def vote_class(self):
+		svm_clf = SVC(kernel='rbf', C=100, gamma=2, probability=True)
+		rf_clf = RandomForestClassifier(n_estimators=200, max_depth=None, random_state=42)
+
+		ensemble = VotingClassifier(estimators=[('svm', svm_clf), ('rf', rf_clf)], voting='soft')

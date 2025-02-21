@@ -13,7 +13,7 @@ def remove_eog(ica, data, plt=False, title="", verbose=False):
 
 	return ica
 
-def plot_ica_comp(self, path, verbose=False):
+def plot_ica_comp(path, verbose=False):
 	print(path)
 	ica = mne.preprocessing.read_ica(path)
 	ica.plot_components()

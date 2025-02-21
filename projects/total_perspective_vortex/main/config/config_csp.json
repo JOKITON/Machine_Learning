@@ -50,15 +50,15 @@
     "ev_mlist_seven" : [[1, 5]],
     "ev_mlist_eight" : [[1, 2, 3, 4, 5]],
 
-    "n_components" : 8,
+    "n_components" : 12,
     "frequency_sample" : 160,
 
     "tmin" : 0.3,
     "tmax" : 3,
 
-    "freq_exec_hands" : [[8, 12], [14, 26]],
-    "freq_exec_hf" : [[8, 12], [14, 26]],
-    "freq_img_hands" : [[8, 12], [14, 26]],
-    "freq_img_hf" : [[8, 12], [14, 26]]
+    "freq_exec_hands" : [[8, 12], [16, 30]],
+    "freq_exec_hf" : [[8, 12], [16, 30]],
+    "freq_img_hands" : [[8, 12], [16, 30]],
+    "freq_img_hf" : [[8, 12], [16, 30]]
 
 }
