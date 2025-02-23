@@ -13,7 +13,7 @@ from mne.decoding import CSP
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.model_selection import cross_val_score, ShuffleSplit
+from sklearn.model_selection import cross_val_score, ShuffleSplit, cross_validate
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
@@ -43,6 +43,8 @@ class EEGData:
 		self.clean_raw_h, self.clean_raw_hf = None, None
 		self.ica_h = None
 		self.ica_hf = None
+		self.epochs = None
+		self.lda, self.svm, self.rf = None, None, None
 
 		# Initialize basic variables to fill later
 		self.config = config
@@ -68,27 +70,27 @@ class EEGData:
 
 	def load_data(self, folder, verbose=False):
 		"""Loads EEG data from files."""
+		fast_start = self.config['fast_start'].lower() == 'true'
 		is_raw_local = self.config['is_raw_local'].lower() == 'true'
 		is_raw_filt_local = self.config['is_raw_filt_local'].lower() == 'true'
 		is_event_local = self.config['is_event_local'].lower() == 'true'
-		fast_start = self.config['fast_start'].lower() == 'true'
 		is_ica_local = self.config['is_ica_local'].lower() == 'true'
+		is_epoch_local = self.config['is_epoch_local'].lower() == 'true'
 
 		if is_raw_local is False: # In case data is not stored locally
 			data1, _ = fetch_data(self.subject, self.config["run_exec_h"],
 				{1:'rest', 2: 'do/left_hand', 3: 'do/right_hand'}, self.montage, verbose=verbose)
 			data2, _ = fetch_data(self.subject, self.config["run_img_h"],
 				{1:'rest', 2: 'imagine/left_hand', 3: 'imagine/right_hand'}, self.montage, verbose=verbose)
+			self.raw_h = mne.concatenate_raws(raws=[data1, data2])
 
 			data1, _ = fetch_data(self.subject, self.config["run_exec_hf"],
 				{1:'rest', 2: 'do/feet', 3: 'do/hands'}, self.montage, verbose=verbose)
 			data2, _ = fetch_data(self.subject, self.config["run_img_hf"],
 				{1:'rest', 2: 'imagine/feet', 3: 'imagine/hands'}, self.montage, verbose=verbose)
-
-			self.raw_h = mne.concatenate_raws(raws=[data1, data2])
 			self.raw_hf = mne.concatenate_raws(raws=[data1, data2])
 
-		else: # In case data is stored locally
+		elif is_raw_local is True: # In case data is stored locally
 			print("Loaded data:")
 			self.raw_h, self.raw_hf = read_data(
         			type="raw", config=self.config, base_path=folder, verbose=verbose)
@@ -108,7 +110,7 @@ class EEGData:
 
 			self.IS_FILTERED = True
 
-		if is_ica_local == True and fast_start is False: # In case filtered data is stored locally
+		if is_ica_local == True: # In case filtered data is stored locally
 			self.ica_h, self.ica_hf = read_data(
 				type="ica", config=self.config, base_path=folder, verbose=verbose)
 			print(self.ica_h, self.ica_hf)
@@ -118,6 +120,12 @@ class EEGData:
 			print(self.ica_h, self.ica_hf)
 
 			self.IS_ICA = True
+
+		if is_epoch_local is True:
+			self.epochs = read_data(
+				type="epochs", config=self.config, base_path=folder, verbose=verbose)
+			print(self.epochs)
+			
 
 	def get_raw(self):
 		"""Returns EEG and noise data."""
@@ -143,7 +151,7 @@ class EEGData:
 		"""Applies bandpass filter to EEG and noise data. Can also crop data."""
 		if self.IS_FILTERED:
 			raise(ValueError("Data has already been filtered..."))
-		if self.raw_h or self.raw_hf is None:
+		if self.raw_h is None or self.raw_hf is None:
 			raise(ValueError("Data has not been loaded. Call `load_data()` before filtering."))
 		if tmax:
 			print(f"Cropping data to {tmax:.2f} seconds.")
@@ -226,6 +234,11 @@ class EEGData:
 
 	def crt_epochs(self, data, events, event_dict, group_type, verbose=False):
 		""" Cretates epochs to later apply CSP, ICA and feed the ML algorimth selected. """
+		if self.IS_ICA is False:
+			raise(ValueError("ICA has not been applied to the data. Please check the data."))
+		if self.epochs is not None:
+			print("Epochs have already been created... Re-creating epochs.")
+
 		tmin = self.csp_config["tmin"]
 		tmax = self.csp_config["tmax"]
 
@@ -243,14 +256,14 @@ class EEGData:
 
 		return self.epochs, freq_bands
 
-	def csp(self, data, labels, freq_bands, verbose=False):
+	def csp(self, data, labels, freq_bands, epochs_info, verbose=False):
 		tmin = self.csp_config["tmin"]
 		tmax = self.csp_config["tmax"]
 
 		n_components = self.csp_config["n_components"]
 		fs = self.csp_config["frequency_sample"]
 
-		features, csp = compute_csp(data, labels, freq_bands, n_components, fs, verbose=verbose)
+		features, csp = compute_csp(data, labels, freq_bands, n_components, fs, epochs_info, verbose=verbose)
 
 		return features, csp
 
@@ -389,40 +402,52 @@ class EEGData:
 
 		return scores
 
+	def cross_validate(self, X, y, pipeline, n_splits=5):
+		# Evaluate the pipeline using cross-validation
+		cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+		scores = cross_validate(pipeline, X, y, cv=cv, return_train_score=True)
+  
+		print(scores)
+
 	def train_model(self, X, y, pipeline=None):
 
-		# Divide the data into training and testing sets
-		X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+		self.lda = LDA(solver="eigen")
+		self.lda.fit(X, y)
 
-		lda = LDA(solver="eigen")
-		lda.fit(X_train, y_train)
-		y_pred_lda = lda.predict(X_test)
+		self.svm = SVC(kernel='rbf', C=100, gamma=2, probability=False)
+		self.svm.fit(X, y)
 
-		svm = SVC(kernel='rbf', C=100, gamma=2, probability=False)
-		svm.fit(X_train, y_train)
-		y_pred_svm = svm.predict(X_test)
+		self.rf = RandomForestClassifier(n_estimators=200, random_state=42)
+		self.rf.fit(X, y)
 
-		rf = RandomForestClassifier(n_estimators=200, random_state=42)
-		rf.fit(X_train, y_train)
-		y_pred_rf = rf.predict(X_test)
 
-		print("Train Accuracy LDA:", accuracy_score(y_train, lda.predict(X_train)))
-		print("Train Accuracy SVM:", accuracy_score(y_train, svm.predict(X_train)))
-		print("Train Accuracy RF:", accuracy_score(y_train, rf.predict(X_train)))
+		print("Train Accuracy LDA:", accuracy_score(y, self.lda.predict(X)))
+		print("Train Accuracy SVM:", accuracy_score(y, self.svm.predict(X)))
+		print("Train Accuracy RF:", accuracy_score(y, self.rf.predict(X)))
+		print()
 
-		""" for pred, real in zip(y_pred_lda, y_test):
-			print(f"Predicted: {pred} - Real: {real}") """
 
-		print("LDA Accuracy:", accuracy_score(y_test, y_pred_lda))
-		print("SVM Accuracy:", accuracy_score(y_test, y_pred_svm))
-		print("Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
+	def pred(self, X, y, pipeline, n_preds=20, prt_matrix=False):
+		if self.lda and self.svm and self.rf is None:
+			raise ValueError("Model has not been trained. Call `train_model()` before predicting.")
 
-		print("Confusion Matrix LDA:\n", confusion_matrix(y_test, y_pred_lda))
-		print("Confusion Matrix SVM:\n", confusion_matrix(y_test, y_pred_svm))
-		print("Confusion Matrix RF:\n", confusion_matrix(y_test, y_pred_rf))
-  
-	def vote_class(self):
-		svm_clf = SVC(kernel='rbf', C=100, gamma=2, probability=True)
-		rf_clf = RandomForestClassifier(n_estimators=200, max_depth=None, random_state=42)
+		y_pred_lda = self.lda.predict(X)
+		y_pred_svm = self.svm.predict(X)
+		y_pred_rf = self.rf.predict(X)
 
-		ensemble = VotingClassifier(estimators=[('svm', svm_clf), ('rf', rf_clf)], voting='soft')
+		print("epoch nb: [prediction] [truth] equal?")
+		for i, (pred, real) in enumerate(zip(y_pred_svm, y)):
+			is_correct = "True" if pred == real else "False"
+			if i > n_preds:
+				break
+			print(f"epoch {i:03}:\t[{pred}]\t\t[{real}]  {is_correct}")
+		print()
+
+		print("LDA Accuracy:", accuracy_score(y, y_pred_lda))
+		print("SVM Accuracy:", accuracy_score(y, y_pred_svm))
+		print("Random Forest Accuracy:", accuracy_score(y, y_pred_rf))
+
+		if prt_matrix:
+			print("Confusion Matrix LDA:\n", confusion_matrix(y, y_pred_lda))
+			print("Confusion Matrix SVM:\n", confusion_matrix(y, y_pred_svm))
+			print("Confusion Matrix RF:\n", confusion_matrix(y, y_pred_rf))

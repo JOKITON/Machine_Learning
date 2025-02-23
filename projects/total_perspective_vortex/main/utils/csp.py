@@ -16,7 +16,7 @@ def apply_bandpass_filter(data, lowcut, highcut, fs, order=5):
 	b, a = butter_bandpass(lowcut, highcut, fs, order=order)
 	return filtfilt(b, a, data, axis=-1)
   
-def compute_csp(epochs_data, labels, freq_bands, n_components, fs, verbose=False):
+def compute_csp(epochs_data, labels, freq_bands, n_components, fs, epochs_info=None, verbose=False):
 	""" Extract discriminative features for binary classification tasks """
 
 	all_features = []
@@ -31,6 +31,9 @@ def compute_csp(epochs_data, labels, freq_bands, n_components, fs, verbose=False
 		print(filtered_data.shape)
 		print(labels.shape)
 		features = csp.fit_transform(filtered_data, labels)
+
+		if epochs_info is not None:
+			csp.plot_patterns(epochs_info, ch_type='eeg', units='uV', size=1.5)
 
 		all_features.append(features)
 

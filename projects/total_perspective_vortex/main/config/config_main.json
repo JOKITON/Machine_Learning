@@ -45,5 +45,5 @@
     "l_freq": 8,
     "h_freq": 30.0,
 
-    "n_components" : 64
+    "n_components_ica" : 64
 }
