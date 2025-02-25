@@ -21,6 +21,7 @@ def compute_csp(epochs_data, labels, freq_bands, n_components, fs, epochs_info=N
 	""" Extract discriminative features for binary classification tasks """
 
 	all_features = []
+	print(epochs_data.shape, labels.shape)
 	for lowcut, highcut in freq_bands:
 		# Filtrar los datos en la banda seleccionada
 		filtered_data = np.array([
@@ -29,8 +30,6 @@ def compute_csp(epochs_data, labels, freq_bands, n_components, fs, epochs_info=N
 
 		# Aplicar CSP en la banda filtrada
 		csp = CSP(n_components=n_components, reg='ledoit_wolf', log=True, norm_trace=False)
-		print(filtered_data.shape)
-		print(labels.shape)
 		features = csp.fit_transform(filtered_data, labels)
 
 		""" if epochs_info is not None:

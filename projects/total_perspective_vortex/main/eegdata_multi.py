@@ -24,9 +24,10 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 
 from scipy.signal import butter, filtfilt
+import pickle
 
 from utils.csp import butter_bandpass, apply_bandpass_filter, compute_csp
-from utils.data import read_data, save_data, fetch_data
+from utils.data import read_data, save_data, fetch_data, save_model, load_model, save_test_data, load_test_data
 from utils.ica import remove_eog
 
 class EEGData:
@@ -47,6 +48,7 @@ class EEGData:
 		self.lda, self.svm, self.rf = None, None, None
 
 		# Initialize basic variables to fill later
+		self.folder_path = folder
 		self.config = config
 		self.csp_config = config_csp
 
@@ -93,37 +95,37 @@ class EEGData:
 		elif is_raw_local is True: # In case data is stored locally
 			print("Loaded data:")
 			self.raw_h, self.raw_hf = read_data(
-        			type="raw", config=self.config, base_path=folder, verbose=verbose)
+        			type="raw", config=self.config, base_path=self.folder_path, verbose=verbose)
 			print(self.raw_h, self.raw_hf)
 
 		if is_event_local == True:
 			self.events_h, self.events_hf = read_data(
-				type="events", config=self.config, base_path=folder, verbose=verbose)
+				type="events", config=self.config, base_path=self.folder_path, verbose=verbose)
 		else:
 			self.events_h, _ = mne.events_from_annotations(self.raw_h, verbose=verbose)
 			self.events_hf, _ = mne.events_from_annotations(self.raw_hf, verbose=verbose)
 
 		if is_raw_filt_local == True and fast_start is False: # In case filtered data is stored locally
 			self.raw_filt_h, self.raw_filt_hf = read_data(
-				type="filtered", config=self.config, base_path=folder, verbose=verbose)
+				type="filtered", config=self.config, base_path=self.folder_path, verbose=verbose)
 			print(self.raw_filt_h, self.raw_filt_hf)
 
 			self.IS_FILTERED = True
 
 		if is_ica_local == True: # In case filtered data is stored locally
 			self.ica_h, self.ica_hf = read_data(
-				type="ica", config=self.config, base_path=folder, verbose=verbose)
+				type="ica", config=self.config, base_path=self.folder_path, verbose=verbose)
 			print(self.ica_h, self.ica_hf)
 
 			self.clean_raw_h, self.clean_raw_hf = read_data(
-				type="clean", config=self.config, base_path=folder, verbose=verbose)
+				type="clean", config=self.config, base_path=self.folder_path, verbose=verbose)
 			print(self.ica_h, self.ica_hf)
 
 			self.IS_ICA = True
 
 		if is_epoch_local is True:
 			self.epochs = read_data(
-				type="epochs", config=self.config, base_path=folder, verbose=verbose)
+				type="epochs", config=self.config, base_path=self.folder_path, verbose=verbose)
 			print(self.epochs)
 			
 
@@ -188,25 +190,25 @@ class EEGData:
 		fig.axes[0].set_title('PSD of concatenated Raw data after filtering')
 		plt.show()
 
-	def save_type_data(self, type, folder_path, verbose=False):
+	def save_type_data(self, type, verbose=False):
 		"""Saves cleaned data to a given filepath."""
 		if type == "raw":
-			save_data(self.raw_h, type, 1, self.config, folder_path, verbose=verbose)
-			save_data(self.raw_hf, type, 2, self.config, folder_path, verbose=verbose)
+			save_data(self.raw_h, type, 1, self.config, self.folder_path, verbose=verbose)
+			save_data(self.raw_hf, type, 2, self.config, self.folder_path, verbose=verbose)
 		elif type == "events":
-			save_data(self.events_h, type, 1, self.config, folder_path, verbose=verbose)
-			save_data(self.events_hf, type, 2, self.config, folder_path, verbose=verbose)
+			save_data(self.events_h, type, 1, self.config, self.folder_path, verbose=verbose)
+			save_data(self.events_hf, type, 2, self.config, self.folder_path, verbose=verbose)
 		elif type == "filtered" and self.IS_FILTERED:
-			save_data(self.raw_filt_h, type, 1, self.config, folder_path, verbose=verbose)
-			save_data(self.raw_filt_hf, type, 2, self.config, folder_path, verbose=verbose)
+			save_data(self.raw_filt_h, type, 1, self.config, self.folder_path, verbose=verbose)
+			save_data(self.raw_filt_hf, type, 2, self.config, self.folder_path, verbose=verbose)
 		elif type == "ica" and self.IS_ICA:
-			save_data(self.ica_h, type, 1, self.config, folder_path, verbose=verbose)
-			save_data(self.ica_hf, type, 2, self.config, folder_path, verbose=verbose)
+			save_data(self.ica_h, type, 1, self.config, self.folder_path, verbose=verbose)
+			save_data(self.ica_hf, type, 2, self.config, self.folder_path, verbose=verbose)
 		elif type == "clean" and self.IS_ICA:
-			save_data(self.clean_raw_h, type, 1, self.config, folder_path, verbose=verbose)
-			save_data(self.clean_raw_hf, type, 2, self.config, folder_path, verbose=verbose)
+			save_data(self.clean_raw_h, type, 1, self.config, self.folder_path, verbose=verbose)
+			save_data(self.clean_raw_hf, type, 2, self.config, self.folder_path, verbose=verbose)
 		elif type == "epochs" and self.IS_ICA:
-			save_data(self.epochs, type, 1, self.config, folder_path, verbose=verbose)
+			save_data(self.epochs, type, 1, self.config, self.folder_path, verbose=verbose)
 		else:
 			raise ValueError("Data has not been proccessed correctly. Check the type and the data.")
 
@@ -409,7 +411,7 @@ class EEGData:
   
 		print(scores)
 
-	def train_model(self, X, y, pipeline=None):
+	def train_model(self, X, y):
 
 		self.lda = LDA(solver="eigen")
 		self.lda.fit(X, y)
@@ -426,8 +428,32 @@ class EEGData:
 		print("Train Accuracy RF:", accuracy_score(y, self.rf.predict(X)))
 		print()
 
+	def save_models(self, X_test, y_test):
 
-	def pred(self, X, y, pipeline, n_preds=20, prt_matrix=False):
+		if self.lda is None or self.svm is None or self.rf is None:
+			raise(ValueError("The ML classification algorimths are not initialized. Call '.train_model()' before..."))
+
+		# Save the model to a file
+		save_model(self.folder_path, self.config, 'lda', self.lda)
+		save_model(self.folder_path, self.config, 'svm', self.svm)
+		save_model(self.folder_path, self.config, 'rf', self.rf)
+
+		save_test_data(self.folder_path, self.config, X_test, y_test)
+
+	def load_models(self):
+
+		self.lda = load_model(self.folder_path, self.config, 'lda')
+		self.svm = load_model(self.folder_path, self.config, 'svm')
+		self.rf = load_model(self.folder_path, self.config, 'rf')
+  
+		print("All the ML classification algorimths have been correctly loaded.")
+		print("You can now call '.pred()' to make predictions on the testing data.")
+
+		X_test, y_test = load_test_data(self.folder_path, self.config) 
+		return X_test, y_test
+
+
+	def pred(self, X, y, n_preds=20, prt_matrix=False):
 		if self.lda and self.svm and self.rf is None:
 			raise ValueError("Model has not been trained. Call `train_model()` before predicting.")
 

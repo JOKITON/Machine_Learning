@@ -22,6 +22,13 @@
     "path_events_h": "data/events/sample_mmi_h.eve",
     "path_events_hf": "data/events/sample_mmi_hf.eve",
 
+    "path_lda": "data/models/lda_model.pkl",
+    "path_svm": "data/models/svm_model.pkl",
+    "path_rf": "data/models/rf_model.pkl",
+
+    "path_X_test": "data/testing_data/X_test.npy",
+    "path_y_test": "data/testing_data/y_test.npy",
+
     "verbose": "False",
     "fast_start" : "False",
     "is_event_local" : "True",
