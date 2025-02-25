@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.signal import butter, filtfilt
 import mne
-from mne.decoding import CSP	
+# from mne.decoding import CSP
+from csp.CSPObj import CSP
  
 def butter_bandpass(lowcut, highcut, fs, order=5):
 		""" Creates a bandpass Butter filter """
@@ -32,8 +33,8 @@ def compute_csp(epochs_data, labels, freq_bands, n_components, fs, epochs_info=N
 		print(labels.shape)
 		features = csp.fit_transform(filtered_data, labels)
 
-		if epochs_info is not None:
-			csp.plot_patterns(epochs_info, ch_type='eeg', units='uV', size=1.5)
+		""" if epochs_info is not None:
+			csp.plot_patterns(epochs_info, ch_type='eeg', units='uV', size=1.5) """
 
 		all_features.append(features)
 
